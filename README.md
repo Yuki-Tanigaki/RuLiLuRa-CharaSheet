@@ -1,6 +1,27 @@
 # RuLiLuRa-CharaSheet
 
-# 新規作成
-npm create vite@latest hero-sheet -- --template react
-npm i
+# 準備
+Windows(WSL) の場合（推奨）
+
+WSL で以下：
+"""
+sudo apt update
+sudo apt install -y curl
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+""""
+
+一度ターミナルを開き直してから：
+"""
+nvm install 22
+nvm use 22
+node -v
+npm -v
+"""
+
+# Vite + Reactでレポジトリ作成
+"""
+npm create vite@latest hero -- --template react
+cd hero
+npm install
 npm run dev
+"""
