@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./styles.css";
 import { SKILLS_MASTER, SKILL_ID_EVADE, skillNameById } from "./data/skillsMaster.js";
+import { WEAPONS_MASTER, weaponById } from "./data/weaponsMaster.js";
 import { calcDerived, roll2d10 } from "./lib/calc.js";
 import { loadState, saveState, exportJson, importJsonFile } from "./lib/storage.js";
 import { validateAll } from "./lib/validate.js";
@@ -16,10 +17,8 @@ function defaultState() {
       dexBonusTargets: []
     },
     equipment: {
-      armor: { id: null, name: "", def: 0, evadePenalty: 0 },
-      shield: { id: null, name: "", def: 0, evadeBonus: 0 },
-      weapon: { id: null, name: "" },
-      items: []
+      items: [
+      ]
     },
     memo: ""
   };
@@ -60,6 +59,35 @@ export default function App() {
 
   const selectedSkillIds = state.skills.selected.map(s => s.id).filter(id => id != null);
   const selectedSet = new Set(selectedSkillIds);
+
+  const equipmentOptions = useMemo(() => {
+    const catLabel = (c) =>
+      c === "weapon" ? "武器" :
+      c === "armor" ? "防具" :
+      c === "shield" ? "盾" : "装備";
+
+    return WEAPONS_MASTER.map(w => ({
+      id: w.id,
+      category: w.category,
+      label: `【${catLabel(w.category)}】${w.name}`
+    }));
+  }, []);
+
+  function addItemRow() {
+    setState(prev => {
+      const next = structuredClone(prev);
+      next.equipment.items.push({ id: null, qty: 1 });
+      return next;
+    });
+  }
+
+  function removeItemRow(index) {
+    setState(prev => {
+      const next = structuredClone(prev);
+      next.equipment.items.splice(index, 1);
+      return next;
+    });
+  }
 
   function update(path, value) {
     setState(prev => {
@@ -182,6 +210,12 @@ export default function App() {
               if (!f) return;
               try {
                 const imported = await importJsonFile(f);
+                // gender正規化（男/女 でも入ってきたら変換）
+                const g = imported?.basic?.gender;
+                if (g === "男") imported.basic.gender = "male";
+                if (g === "女") imported.basic.gender = "female";
+                if (g !== "male" && g !== "female") imported.basic.gender = ""; // それ以外は未選択に
+
                 setState(imported);
               } catch {
                 alert("JSONの読み込みに失敗しました");
@@ -200,7 +234,12 @@ export default function App() {
           <h2>基本情報</h2>
           <div className="row"><div>名前</div><input value={state.basic.name} onChange={e => update(["basic","name"], e.target.value)} /></div>
           <div className="row"><div>年齢</div><input value={state.basic.age} onChange={e => update(["basic","age"], e.target.value)} /></div>
-          <div className="row"><div>性別</div><input value={state.basic.gender} onChange={e => update(["basic","gender"], e.target.value)} /></div>
+          <div className="row"><div>性別</div><select value={state.basic.gender} onChange={(e) => update(["basic","gender"], e.target.value)}>
+            <option value="">（選択）</option>
+            <option value="male">男</option>
+            <option value="female">女</option>
+            </select>
+            </div>
           <div className="row"><div>現世での国籍</div><input value={state.basic.nationality} onChange={e => update(["basic","nationality"], e.target.value)} /></div>
           <div className="row"><div>現世での職業</div><input value={state.basic.job} onChange={e => update(["basic","job"], e.target.value)} /></div>
           <div className="row"><div>英雄レベル</div><input type="number" min="1" value={state.basic.heroLevel} onChange={e => update(["basic","heroLevel"], clamp(e.target.value, 1, 999))} /></div>
@@ -334,16 +373,46 @@ export default function App() {
 
           <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: "12px 0" }} />
 
-          <h2>装備（自由入力）</h2>
-          <div className="row"><div>武器名</div><input value={state.equipment.weapon.name} onChange={e => update(["equipment","weapon","name"], e.target.value)} /></div>
+          <h2>所持品（無制限）</h2>
 
-          <div className="row"><div>防具名</div><input value={state.equipment.armor.name} onChange={e => update(["equipment","armor","name"], e.target.value)} /></div>
-          <div className="row"><div>防具 防御値</div><input type="number" value={state.equipment.armor.def} onChange={e => update(["equipment","armor","def"], Number(e.target.value))} /></div>
-          <div className="row"><div>防具 回避ペナ</div><input type="number" value={state.equipment.armor.evadePenalty} onChange={e => update(["equipment","armor","evadePenalty"], Number(e.target.value))} /></div>
+          <div className="btns no-print" style={{ margin: "8px 0" }}>
+            <button onClick={addItemRow}>＋所持品を追加</button>
+          </div>
 
-          <div className="row"><div>盾名</div><input value={state.equipment.shield.name} onChange={e => update(["equipment","shield","name"], e.target.value)} /></div>
-          <div className="row"><div>盾 防御値</div><input type="number" value={state.equipment.shield.def} onChange={e => update(["equipment","shield","def"], Number(e.target.value))} /></div>
-          <div className="row"><div>盾 回避ボナ</div><input type="number" value={state.equipment.shield.evadeBonus} onChange={e => update(["equipment","shield","evadeBonus"], Number(e.target.value))} /></div>
+          {state.equipment.items.length === 0 && (
+            <div className="small">（所持品なし）</div>
+          )}
+
+          {state.equipment.items.map((it, idx) => (
+            <div key={idx} className="row">
+              <div>所持品{idx + 1}</div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 90px 60px", gap: 8 }}>
+                <select
+                  value={it.id ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value === "" ? null : Number(e.target.value);
+                    update(["equipment", "items", idx, "id"], v);
+                  }}
+                >
+                  <option value="">（未選択）</option>
+                  {equipmentOptions.map(o => (
+                    <option key={o.id} value={o.id}>{o.label}</option>
+                  ))}
+                </select>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={it.qty ?? 1}
+                  onChange={(e) => update(["equipment", "items", idx, "qty"], clamp(e.target.value, 1, 999))}
+                />
+
+                <button className="no-print" onClick={() => removeItemRow(idx)}>削除</button>
+              </div>
+            </div>
+          ))}
+
 
           <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: "12px 0" }} />
           <h2>メモ</h2>
@@ -412,10 +481,44 @@ export default function App() {
 
           <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: "12px 0" }} />
 
-          <h2>装備</h2>
-          <div className="row"><div>武器</div><div>{state.equipment.weapon.name || "—"}</div></div>
-          <div className="row"><div>防具</div><div>{state.equipment.armor.name || "—"}（防御{Number(state.equipment.armor.def)||0}, 回避{Number(state.equipment.armor.evadePenalty)||0}）</div></div>
-          <div className="row"><div>盾</div><div>{state.equipment.shield.name || "—"}（防御{Number(state.equipment.shield.def)||0}, 回避{Number(state.equipment.shield.evadeBonus)||0}）</div></div>
+          <h2>所持品</h2>
+
+          {state.equipment.items.length === 0 ? (
+            <div className="small">—</div>
+          ) : (
+            <div style={{ marginTop: 6 }}>
+              {state.equipment.items.map((it, i) => {
+                const item = it.id ? weaponById(it.id) : null;
+                const qty = Number(it.qty) || 1;
+
+                const cat =
+                  item?.category === "weapon" ? "武器" :
+                  item?.category === "armor" ? "防具" :
+                  item?.category === "shield" ? "盾" : "装備";
+
+                // ちょい詳細表示（武器ならダメージ、防具/盾なら防御値など）
+                const detail = item
+                  ? (item.category === "weapon"
+                      ? `命中${item.baseHit} / ダメージ${item.damage}`
+                      : `防御${item.defenseValue ?? 0} / 回避${item.evadeMod ?? 0}`)
+                  : "";
+
+                return (
+                  <div key={i} className="row">
+                    <div>{i + 1}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                      <div>
+                        <b>{item?.name ?? "（未選択）"}</b>
+                        {item && <span className="small">（{cat}）</span>}
+                        {detail && <div className="small">{detail}</div>}
+                      </div>
+                      <div>x{qty}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           <hr style={{ border: 0, borderTop: "1px solid #e5e7eb", margin: "12px 0" }} />
 

@@ -14,7 +14,7 @@ export function floorTo10WithNegRule(n) {
 }
 
 export function calcDerived(state) {
-  const a = state.abilities;
+  const a = state.abilities || {};
 
   const m = {
     str: mod(a.str),
@@ -37,23 +37,39 @@ export function calcDerived(state) {
     resist: m.psy + m.vit,
   };
 
-  // equipment (free input)
-  const armorPenalty = Number(state.equipment.armor.evadePenalty) || 0;
-  const shieldBonus = Number(state.equipment.shield.evadeBonus) || 0;
-  const armorDef = Number(state.equipment.armor.def) || 0;
-  const shieldDef = Number(state.equipment.shield.def) || 0;
+  // ------------------------------------------------------------
+  // equipment: いまは「所持品(items)のみ」＝装備による計算は未実装
+  // 旧JSONが混ざっても落ちないように optional で拾う（互換）
+  // ------------------------------------------------------------
+  const eq = state.equipment || {};
+
+  // 新仕様（所持品のみ）では装備補正はゼロ扱い
+  let armorPenalty = 0;
+  let shieldBonus = 0;
+  let armorDef = 0;
+  let shieldDef = 0;
+
+  // 旧仕様データが残っている場合だけ、互換で反映（いらなければこの if ブロック削除OK）
+  if (eq.armor || eq.shield) {
+    armorPenalty = Number(eq.armor?.evadePenalty) || 0;
+    shieldBonus = Number(eq.shield?.evadeBonus) || 0;
+    armorDef = Number(eq.armor?.def) || 0;
+    shieldDef = Number(eq.shield?.def) || 0;
+  }
 
   const defense = armorDef + shieldDef;
 
   // skills
-  const selected = state.skills.selected; // [{id, base}]
-  const baseById = new Map(selected.filter(s => s.id != null).map(s => [s.id, Number(s.base) || 0]));
+  const selected = state.skills?.selected || []; // [{id, base}]
+  const baseById = new Map(
+    selected.filter(s => s?.id != null).map(s => [s.id, Number(s.base) || 0])
+  );
 
   const intMod = m.int;
   const dexMod = m.dex;
 
-  const intTargets = new Set(state.skills.intBonusTargets || []);
-  const dexTargets = new Set(state.skills.dexBonusTargets || []);
+  const intTargets = new Set(state.skills?.intBonusTargets || []);
+  const dexTargets = new Set(state.skills?.dexBonusTargets || []);
 
   function finalSkillValue(id) {
     const base = baseById.get(id) ?? 0;

@@ -1,10 +1,11 @@
 import { SKILLS_MASTER } from "../data/skillsMaster.js";
+import { WEAPONS_MASTER } from "../data/weaponsMaster.js";
 
 export function validateAll(state) {
   const errors = [];
 
   // abilities
-  const a = state.abilities;
+  const a = state.abilities || {};
   const abilityKeys = ["str", "dex", "agi", "vit", "int", "psy"];
   for (const k of abilityKeys) {
     const v = Number(a[k]);
@@ -17,9 +18,15 @@ export function validateAll(state) {
     if (sum !== 70) errors.push(`能力値合計が70ではありません（現在: ${sum}）`);
   }
 
+  // basic: gender (male/female only)
+  const g = (state.basic?.gender ?? "").trim();
+  if (g !== "male" && g !== "female") {
+    errors.push(`性別は「男」「女」から選択してください`);
+  }
+
   // skills: 8 selected, distinct
-  const selected = state.skills.selected || [];
-  const ids = selected.map(s => s.id).filter(id => id != null);
+  const selected = state.skills?.selected || [];
+  const ids = selected.map(s => s?.id).filter(id => id != null);
 
   if (ids.length !== 8) errors.push(`スキルは8つ選択してください（現在: ${ids.length}）`);
 
@@ -27,23 +34,23 @@ export function validateAll(state) {
   if (dup.length) errors.push(`スキルが重複しています`);
 
   // skill base points
-  const bases = selected.map(s => Number(s.base) || 0);
-  const sumBase = bases.reduce((a, b) => a + b, 0);
+  const bases = selected.map(s => Number(s?.base) || 0);
+  const sumBase = bases.reduce((x, y) => x + y, 0);
 
   if (sumBase !== 80) errors.push(`スキルポイント合計が80ではありません（現在: ${sumBase}）`);
 
   for (const s of selected) {
-    const b = Number(s.base) || 0;
-    if (b < 5 || b > 20) errors.push(`スキル値は5〜20（id=${s.id ?? "未選択"}）`);
-    if (b % 5 !== 0) errors.push(`スキル値は5刻み（id=${s.id ?? "未選択"}）`);
+    const b = Number(s?.base) || 0;
+    if (b < 5 || b > 20) errors.push(`スキル値は5〜20（id=${s?.id ?? "未選択"}）`);
+    if (b % 5 !== 0) errors.push(`スキル値は5刻み（id=${s?.id ?? "未選択"}）`);
   }
 
   // bonus targets rules
   const intMod = (Number(a.int) || 0) - 10;
   const dexMod = (Number(a.dex) || 0) - 10;
 
-  const intTargets = state.skills.intBonusTargets || [];
-  const dexTargets = state.skills.dexBonusTargets || [];
+  const intTargets = state.skills?.intBonusTargets || [];
+  const dexTargets = state.skills?.dexBonusTargets || [];
 
   if (intMod > 0 && intTargets.length !== 2) errors.push(`知力ボーナス対象は2つ選択してください`);
   if (intMod <= 0 && intTargets.length !== 0) errors.push(`知力ボーナス対象は知力修正が+のときのみ`);
@@ -65,6 +72,49 @@ export function validateAll(state) {
   // sanity: id exists in master
   const masterSet = new Set(SKILLS_MASTER.map(s => s.id));
   for (const id of ids) if (!masterSet.has(id)) errors.push(`未知のスキルID: ${id}`);
+
+  // ------------------------------------------------------------
+  // equipment: 所持品(items) のみ（無制限）
+  // - items は配列
+  // - 各要素は { id: number|null, qty: number }
+  // - id が入っているなら WEAPONS_MASTER に存在すること
+  // ------------------------------------------------------------
+  const items = state.equipment?.items;
+
+  if (items == null) {
+    // 無くても良い運用ならエラーにしない（旧データ互換）
+    // errors.push(`所持品データがありません`);
+  } else if (!Array.isArray(items)) {
+    errors.push(`所持品(items)が配列ではありません`);
+  } else {
+    const weaponIdSet = new Set(WEAPONS_MASTER.map(w => w.id));
+
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      const idxLabel = `所持品${i + 1}`;
+
+      if (typeof it !== "object" || it == null) {
+        errors.push(`${idxLabel} が不正です`);
+        continue;
+      }
+
+      const id = it.id;
+      const qty = Number(it.qty ?? 1);
+
+      if (id != null && !Number.isFinite(Number(id))) {
+        errors.push(`${idxLabel} のIDが数値ではありません`);
+      }
+
+      if (!Number.isFinite(qty) || qty < 1 || Math.floor(qty) !== qty) {
+        errors.push(`${idxLabel} の数量は1以上の整数にしてください`);
+      }
+
+      if (id != null) {
+        const nid = Number(id);
+        if (!weaponIdSet.has(nid)) errors.push(`${idxLabel} の装備IDがマスターに存在しません（id=${nid}）`);
+      }
+    }
+  }
 
   return errors;
 }
