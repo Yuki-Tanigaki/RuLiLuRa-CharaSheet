@@ -21,5 +21,9 @@ npm -v
 npm create vite@latest . -- --template react
 npm install
 npm install lz-string
+```
+
+# ローカルで起動
+```
 npm run dev
 ```
