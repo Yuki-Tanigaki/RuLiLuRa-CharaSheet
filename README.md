@@ -19,7 +19,6 @@ npm -v
 # Vite + Reactでレポジトリ作成
 ```
 npm create vite@latest . -- --template react
-cd hero
 npm install
 npm run dev
 ```
