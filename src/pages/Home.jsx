@@ -1,7 +1,6 @@
-// src/pages/HeroSheetFeature.jsx （配置はあなたの構成に合わせて）
-// ※ import パスは今のHeroSheetFeatureの位置に合わせて調整してね
+// src/pages/Home.jsx
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import HeroSheet from "./sheets/heroSheet/HeroSheet.jsx";
 import { defaultHeroState } from "./sheets/heroSheet/defaultHeroState.js";
 import { commitHistory } from "../lib/versioning.js";
@@ -13,10 +12,9 @@ import { exportJson, importJsonViaPicker, saveState, loadState } from "../lib/st
 export default function HeroSheetFeature() {
   const [mode, setMode] = useState("view"); // "view" | "edit" | "create"
 
-  // もし「前回の状態を復元」もしたいなら loadState を使う（不要なら defaultHeroState のままでOK）
-  const [hero, setHero] = useState(() => loadState({ sheetType: "hero" }) ?? defaultHeroState());
-
   const sheetType = "hero";
+
+  const [hero, setHero] = useState(() => loadState({ sheetType }) ?? defaultHeroState());
 
   function handleCreate() {
     const s = defaultHeroState();
@@ -46,12 +44,8 @@ export default function HeroSheetFeature() {
     const imported = await importJsonViaPicker();
     if (!imported) return;
 
-    // そのまま反映（必要なら migrate/validate をここに挟む）
     setHero(imported);
-
-    // 読み込んだら編集にしておくのが親切（好みで view にしてもOK）
     setMode("edit");
-
     saveState(imported, { sheetType });
   }
 
@@ -60,23 +54,19 @@ export default function HeroSheetFeature() {
     const param = readStateParamFromHash();
     const restored = decodeStateFromParam(param);
     if (restored && typeof restored === "object") {
-      setState(restored);
-      // 共有URLから開いた時は編集できた方が便利なら edit にする等
-      // setMode("edit");
+      setHero(restored);                 // ✅ setState → setHero
+      saveState(restored, { sheetType }); // ✅ ついでにローカルにも保存（任意）
+      // setMode("edit"); // 共有URLから開いたら編集にしたいならON
     }
-    // 初回のみ
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleShare() {
     const url = buildShareUrl({
-      // ここはあなたのルーティングに合わせて
-      // 例：#/sheets/hero なら "/sheets/hero" を渡す
       path: "/sheets/hero",
-      state,
+      state: hero, // ✅ state → hero
     });
 
-    // URL長すぎ警告（ブラウザ/共有先で死ぬのを避ける）
     if (url.length > 8000) {
       alert(`共有URLが長すぎます（${url.length}文字）。\n所持品やメモが多い場合、短縮/サーバ保存方式を検討してください。`);
     }
@@ -101,7 +91,6 @@ export default function HeroSheetFeature() {
         state={hero}
         mode={mode}
         setState={(next) => {
-          // next が関数更新でも値更新でも対応
           setHero((prev) => {
             const v = typeof next === "function" ? next(prev) : next;
             saveState(v, { sheetType }); // 変更のたびに自動保存
