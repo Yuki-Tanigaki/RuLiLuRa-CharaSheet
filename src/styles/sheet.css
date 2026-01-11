@@ -1,0 +1,596 @@
+/* =========================
+   Sheet Layout (paper-like)
+   ========================= */
+
+/* ====== 個別スライド（横スクロール）を成立させる土台 ====== */
+.page.sheet, .page.sheet * {
+  box-sizing: border-box;
+}
+
+/* 2カラム（広い時） */
+.hero-sheet .sheet-layout {
+  display: grid;
+
+  /* paper を 70% にしたなら、サイドは残り幅(=30%)で寄る */
+  grid-template-columns:
+    minmax(980px, 70%)
+    minmax(360px, max-content)
+    minmax(16px, 1fr);
+
+  gap: 16px;
+  align-items: start;
+}
+
+/* “個別にスライド”するスクロールコンテナ */
+.hero-sheet .sheet-scroll {
+  overflow-x: auto;                 /* ←各ブロックで横スクロール */
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+
+  /* 横スクロール時、変なはみ出しを防ぐ */
+  min-width: 0;
+}
+
+/* Main paperは縮めずに“中で”横スクロールさせる */
+.hero-sheet .paper {
+  background: #fff;
+  border: 2px solid #111;
+  padding: 12px;
+
+  min-width: 980px;  /* 紙の最小幅。必要に応じて調整 */
+  max-width: none;   /* スクロール前提なので制限しない */
+}
+
+/* Side panelも“中で”横スクロールできるようにする */
+.hero-sheet .side-scroll > * {
+  min-width: 360px;  /* Sideの最小幅 */
+}
+
+/* ====== 狭い画面では縦並び（ただし各自で横スクロール） ====== */
+@media (max-width: 980px) {
+  .hero-sheet .sheet-layout {
+    grid-template-columns: 1fr;     /* 縦に積む */
+  }
+
+  /* Sideの固定幅指定が残っていると潰れるので解除 */
+  .hero-sheet .side-scroll {
+    width: 100%;
+  }
+}
+
+/* ====== ① 最終命中列だけ折り返し ====== */
+.sheet .sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+}
+
+.sheet .sheet-table th,
+.sheet .sheet-table td {
+  border: 1px solid #111;
+  padding: 4px 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet .sheet-table th {
+  background: #f5f5f5;
+  font-weight: 800;
+}
+
+/* 最終列だけ折り返しOK（注釈が長い） */
+.sheet .sheet-table th:last-child,
+.sheet .sheet-table td:last-child {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+/* 注釈を小さく */
+.sheet .sheet-table td:last-child span {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* 入力が飛び出さない共通対策 */
+.sheet .sheet-input {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* =========================
+   Toolbar
+   ========================= */
+
+.sheet-toolbar {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin: 0 0 10px 0;
+}
+
+/* ボタン共通 */
+.sheet-btn {
+  appearance: none;
+  border: 1px solid #111;
+  background: #fff;
+  color: #111;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.sheet-btn:hover {
+  background: #f5f5f5;
+}
+
+.sheet-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 目立つボタン */
+.sheet-btn.primary {
+  background: #111;
+  color: #fff;
+}
+.sheet-btn.primary:hover {
+  background: #222;
+}
+
+/* =========================
+   HeroSheet Layout
+   (paper + side, scroll instead of collapsing)
+   ========================= */
+
+/* HeroSheet.jsx の sheet-layout を想定（classNameで付いている） */
+.sheet-layout {
+  /* ②：狭い画面でも潰さず、ここで横スクロール */
+  overflow-x: auto;
+  overflow-y: visible;
+
+  /* スクロール時にガタつきにくく */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 紙っぽい一枚 */
+.sheet .paper {
+  background: #fff;
+  border: 2px solid #111;
+  padding: 12px;
+
+  /* ②：紙の幅を維持（潰さない） */
+  min-width: 980px;  /* 必要なら 920〜1100 で調整 */
+  max-width: none;     /* ←レイアウト側で70%を管理する */
+
+  /* 子要素が溢れても外へ飛び出さない */
+  overflow: hidden;
+}
+
+/* =========================
+   Grid blocks inside paper
+   ========================= */
+
+.sheet .grid-top {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.sheet .grid-mid {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.sheet .grid-bottom {
+  display: grid;
+  grid-template-columns: 260px 1fr 260px;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* パネル共通 */
+.sheet .panel {
+  border: 1px solid #111;
+  background: #fff;
+  min-width: 0; /* grid/flexの子要素が縮めずに溢れるのを防ぐ */
+}
+
+.sheet .panel-title {
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #111;
+  background: #f5f5f5;
+  letter-spacing: 0.04em;
+}
+
+/* =========================
+   Portrait
+   ========================= */
+
+.sheet .portrait {
+  padding: 10px;
+}
+
+.sheet .portrait-frame {
+  border: 1px solid #111;
+  height: 100%;
+  min-height: 340px;
+  display: grid;
+  place-items: center;
+}
+
+.sheet .portrait-placeholder {
+  color: #999;
+  font-weight: 700;
+}
+
+.sheet .portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* =========================
+   Header
+   ========================= */
+
+.sheet .header {
+  padding: 10px;
+}
+
+.sheet .header-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.sheet .brand-sub {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.sheet .brand-title {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.sheet .basic-grid {
+  display: grid;
+  grid-template-columns: 130px 1fr 130px 1fr;
+  gap: 6px 10px;
+  margin-bottom: 10px;
+  min-width: 0;
+}
+
+.sheet .basic-grid .label {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.sheet .basic-grid .value {
+  border-bottom: 1px solid #111;
+  font-size: 12px;
+  padding: 2px 4px;
+  min-height: 18px;
+  min-width: 0;
+}
+
+.sheet .basic-grid .value.big {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+/* =========================
+   Abilities + HP circles
+   ========================= */
+
+.sheet .ability-wrap {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 10px;
+  align-items: start;
+  min-width: 0;
+}
+
+.sheet .hp-boxes {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  align-content: start;
+}
+
+/* 楕円を固定幅にして紙から飛び出させない */
+.sheet .circle {
+  width: 110px;
+  max-width: 100%;
+  height: 74px;
+  border: 1px solid #111;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+}
+
+.sheet .circle-label {
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0.85;
+}
+
+.sheet .circle-val {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+/* =========================
+   Tables
+   ========================= */
+
+.sheet .sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  table-layout: fixed; /* 列幅固定で崩れにくく */
+}
+
+.sheet .sheet-table th,
+.sheet .sheet-table td {
+  border: 1px solid #111;
+  padding: 4px 6px;
+
+  /* デフォルトは省略 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet .sheet-table th {
+  background: #f5f5f5;
+  font-weight: 800;
+}
+
+/* 能力表 */
+.sheet .ability-table td:nth-child(2),
+.sheet .ability-table td:nth-child(3) {
+  text-align: center;
+  font-weight: 800;
+}
+
+/* 装備表 */
+.sheet .equip-table td:nth-child(3),
+.sheet .equip-table td:nth-child(4) {
+  text-align: center;
+  font-weight: 800;
+}
+
+/* スキル表 */
+.sheet .skills-table td.num {
+  text-align: right;
+  font-weight: 900;
+}
+
+/* -------------------------
+   ① 武器表：最終命中列だけ例外的に折り返し
+   ------------------------- */
+.sheet .sheet-table th:last-child,
+.sheet .sheet-table td:last-child {
+  white-space: normal;   /* 最終列だけ折り返しOK */
+  text-overflow: clip;
+  overflow: visible;
+}
+
+/* 注釈（要件未達 -20）を小さく */
+.sheet .sheet-table td:last-child span {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* =========================
+   Inputs
+   ========================= */
+
+/* 所持金/FPなど入力がpaperから飛び出さないように */
+.sheet .sheet-input {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* =========================
+   Combat modifiers
+   ========================= */
+
+.sheet .combat-grid {
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  gap: 6px 8px;
+  padding: 10px;
+  font-size: 12px;
+  min-width: 0;
+}
+
+.sheet .combat-grid .label {
+  font-weight: 800;
+}
+
+.sheet .combat-grid .value {
+  text-align: right;
+  border-bottom: 1px solid #111;
+  padding: 2px 4px;
+  min-height: 18px;
+  min-width: 0;
+}
+
+/* =========================
+   Sections padding
+   ========================= */
+
+.sheet .equips,
+.sheet .skills,
+.sheet .items {
+  padding: 0;
+}
+
+/* アイテム欄（罫線） */
+.sheet .items-lines {
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.sheet .items-lines .line {
+  border-bottom: 1px solid #111;
+  height: 18px;
+}
+
+/* =========================
+   Misc (Money + Memo)
+   ========================= */
+
+.sheet .misc {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+}
+
+.sheet .money-box,
+.sheet .memo-box {
+  border-bottom: 1px solid #111;
+}
+
+.sheet .memo-box {
+  border-bottom: none;
+}
+
+.sheet .money-box .panel-title,
+.sheet .memo-box .panel-title {
+  border-bottom: 1px solid #111;
+}
+
+/* 所持金表示 */
+.sheet .money {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  padding: 18px 10px;
+}
+
+.sheet .money-val {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.sheet .money-unit {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* メモ */
+.sheet .memo {
+  padding: 10px;
+  min-height: 180px;
+  white-space: pre-wrap;
+}
+
+/* 下端の小さい表記 */
+.sheet .footer-meta {
+  margin-top: 8px;
+  font-size: 11px;
+  opacity: 0.7;
+  text-align: right;
+}
+
+/* =========================
+   Mode panel (create/edit)
+   ========================= */
+
+.mode-panel {
+  margin: 12px 0 0;
+  border: 2px solid #111;
+  background: #fff;
+  padding: 12px;
+}
+
+.mode-panel__title {
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 8px 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.mode-label {
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.mode-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.mode-value {
+  border-bottom: 1px solid #111;
+  padding: 2px 4px;
+  min-height: 18px;
+  min-width: 0;
+}
+
+.mode-panel__footer {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.mode-panel button {
+  border: 1px solid #111;
+  background: #fff;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mode-panel button:hover {
+  background: #f5f5f5;
+}
+
+/* =========================
+   Responsive (方針変更)
+   - 1カラム化はしない（潰さずスクロール）
+   ========================= */
+
+/* ここでは“崩さない”ので、ボタン等の可読性だけ最低限 */
+@media (max-width: 900px) {
+  .sheet .basic-grid {
+    grid-template-columns: 130px 1fr; /* ヘッダの入力だけは縦にしてもOK */
+  }
+  .sheet .ability-wrap {
+    grid-template-columns: 1fr;       /* HP枠は下に落としてOK */
+  }
+}
