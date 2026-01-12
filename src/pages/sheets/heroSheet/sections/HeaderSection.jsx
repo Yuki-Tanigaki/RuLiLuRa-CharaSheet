@@ -1,7 +1,7 @@
 // src/pages/sheets/heroSheet/sections/HeaderSection.jsx
 import React, { useMemo, useState } from "react";
-import { TextCell } from "../components/TextCell.jsx";
-import { NumCell } from "../components/NumCell.jsx";
+import { TextCell } from "../../components/TextCell.jsx";
+import { NumCell } from "../../components/NumCell.jsx";
 import { safeNum, clamp } from "../heroSheetUtils.js";
 
 function roll1d10() {
@@ -13,6 +13,21 @@ function roll2d10() {
 
 export function HeaderSection({ model, children }) {
   const { s, a, mods, hp, editable, isCreate, setField, moneyG, fp } = model;
+
+  // current（stateに保存しているHP/MP補正値）
+  const NormalRV = safeNum(s?.resources?.hpNormalRV, 0);
+  const WoundRV  = safeNum(s?.resources?.hpWoundRV,  0);
+  const MpRV     = safeNum(s?.resources?.mpRV,       0);
+
+  // base（能力値からの基礎：いままで表示してた値）
+  const baseNormal = safeNum(hp?.hpNormal, 0);
+  const baseWound  = safeNum(hp?.hpWound, 0);
+  const baseMp     = safeNum(hp?.mp, 0);
+
+  // shown（表示する最終値）
+  const shownNormal = baseNormal + NormalRV;
+  const shownWound  = baseWound + WoundRV;
+  const shownMp     = baseMp + MpRV;
 
   const abilityKeys = useMemo(
     () => [
@@ -29,7 +44,7 @@ export function HeaderSection({ model, children }) {
   const abilitySum = abilityKeys.reduce((acc, x) => acc + safeNum(a?.[x.k], 0), 0);
   const abilityValidRange = abilityKeys.every((x) => {
     const v = safeNum(a?.[x.k], 0);
-    return v >= 2 && v <= 20;
+    return v >= 2;
   });
   const pointOk = abilityValidRange && abilitySum === 70;
 
@@ -63,10 +78,21 @@ export function HeaderSection({ model, children }) {
 
   function swapAbilities() {
     if (swapA === swapB) return;
-    const va = safeNum(a?.[swapA], 0);
-    const vb = safeNum(a?.[swapB], 0);
-    setField(["abilities", swapA], vb);
-    setField(["abilities", swapB], va);
+
+    if (lastRoll?.values) {
+      setLastRoll((prev) => {
+        if (!prev?.values) return prev;
+        const v = { ...prev.values };
+        const va = safeNum(v[swapA], 0);
+        const vb = safeNum(v[swapB], 0);
+        v[swapA] = vb;
+        v[swapB] = va;
+
+        const sum = abilityKeys.reduce((acc, x) => acc + safeNum(v[x.k], 0), 0);
+        return { ...prev, values: v, sum };
+      });
+      return;
+    }
   }
 
   function setInitialMoneyFromIntDex() {
@@ -184,22 +210,97 @@ export function HeaderSection({ model, children }) {
             </tbody>
           </table>
 
-          {/* ✅ 現在値は出さない：最大値のみ */}
+          {/* HP/MP/所持金 */}
           <div className="hp-boxes">
+            {/* 通常HP */}
             <div className="circle">
               <div className="circle-label">通常HP</div>
-              <div className="circle-val">{safeNum(hp?.hpNormal)}</div>
-            </div>
-            <div className="circle">
-              <div className="circle-label">負傷HP</div>
-              <div className="circle-val">{safeNum(hp?.hpWound)}</div>
-            </div>
-            <div className="circle">
-              <div className="circle-label">MP</div>
-              <div className="circle-val">{safeNum(hp?.mp)}</div>
+
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+                <div className="circle-val" style={{ lineHeight: 1 }}>
+                  {shownNormal}
+                </div>
+
+                {editable && (
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <NumCell
+                      editable={editable}
+                      value={NormalRV}
+                      min={-999999999}
+                      max={999999999}
+                      className="num"
+                      onCommit={(v) => setField(["resources", "hpNormalRV"], v)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2, textAlign: "right" }}>
+                <span style={{ opacity: 0.7 }}>{baseNormal}</span>{" "}
+                <span style={{ opacity: 0.7 }}>{model.fmtSigned(NormalRV)}</span>
+              </div>
             </div>
 
-            {/* 所持金 / FP（このまま） */}
+            {/* 負傷HP */}
+            <div className="circle">
+              <div className="circle-label">負傷HP</div>
+
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+                <div className="circle-val" style={{ lineHeight: 1 }}>
+                  {shownWound}
+                </div>
+
+                {editable && (
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <NumCell
+                      editable={editable}
+                      value={WoundRV}
+                      min={-999999999}
+                      max={999999999}
+                      className="num"
+                      onCommit={(v) => setField(["resources", "hpWoundRV"], v)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2, textAlign: "right" }}>
+                <span style={{ opacity: 0.7 }}>{baseWound}</span>{" "}
+                <span style={{ opacity: 0.7 }}>{model.fmtSigned(WoundRV)}</span>
+              </div>
+            </div>
+
+            {/* MP */}
+            <div className="circle">
+              <div className="circle-label">MP</div>
+
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
+                <div className="circle-val" style={{ lineHeight: 1 }}>
+                  {shownMp}
+                </div>
+
+                {editable && (
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                    <NumCell
+                      editable={editable}
+                      value={MpRV}
+                      min={-999999999}
+                      max={999999999}
+                      className="num"
+                      onCommit={(v) => setField(["resources", "mpRV"], v)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2, textAlign: "right" }}>
+                <span style={{ opacity: 0.7 }}>{baseMp}</span>{" "}
+                <span style={{ opacity: 0.7 }}>{model.fmtSigned(MpRV)}</span>
+              </div>
+            </div>
+
+
+            {/* 所持金 / FP */}
             <div style={{ marginTop: 10, display: "grid", gap: 6, fontSize: 12 }}>
               <div style={{ display: "grid", gridTemplateColumns: "70px 1fr", alignItems: "center", gap: 8 }}>
                 <div style={{ opacity: 0.75 }}>所持金</div>
@@ -243,14 +344,14 @@ export function HeaderSection({ model, children }) {
         {/* create時：能力値作成 */}
         {isCreate && editable && (
           <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(0,0,0,0.08)" }}>
-            <div style={{ fontWeight: 700, marginBottom: 6 }}>能力値作成（create専用）</div>
+            <div style={{ fontWeight: 700, marginBottom: 6 }}>能力値作成</div>
 
             <div style={{ fontSize: 12, opacity: 0.85, lineHeight: 1.6 }}>
               <div>## 能力値（ポイント割り振り式）</div>
               <div> - 70ポイントを各能力に割り当て（各能力 2〜20）。</div>
               <div>## 能力値（ランダムロール）</div>
-              <div> - 希望すれば2D10で【筋力】→順に決定（GM許可）。合計が65以下なら振り直し可。</div>
-              <div> - 希望するなら、能力値を自由に交換できる。</div>
+              <div> - 2D10で【筋力】→順に決定。合計が65以下なら振り直し可。</div>
+              <div> - なお、能力値のダイス目は自由に交換できる。</div>
             </div>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10, alignItems: "center" }}>

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import "../../../styles/sheet.css";
 
-import { defaultHeroState } from "./defaultHeroState.js";
+import { defaultHeroState } from "./defaultDivaState.js";
 import { useHeroSheetModel } from "./useHeroSheetModel.js";
 
 import { HeaderSection } from "./sections/HeaderSection.jsx";

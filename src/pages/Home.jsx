@@ -5,16 +5,15 @@ import HeroSheet from "./sheets/heroSheet/HeroSheet.jsx";
 import { defaultHeroState } from "./sheets/heroSheet/defaultHeroState.js";
 import { commitHistory } from "../lib/versioning.js";
 import { buildShareUrl, decodeStateFromParam, readStateParamFromHash } from "../lib/shareUrl.js";
-
-// 追加：JSON保存/読込
 import { exportJson, importJsonViaPicker, saveState, loadState } from "../lib/storage.js";
 
-export default function HeroSheetFeature() {
+export default function Home() {
   const [mode, setMode] = useState("view"); // "view" | "edit" | "create"
 
   const sheetType = "hero";
-
   const [hero, setHero] = useState(() => loadState({ sheetType }) ?? defaultHeroState());
+  // HeroSheet側のポップアップを開くための「合図」
+  const [userCatalogOpenTick, setUserCatalogOpenTick] = useState(0);
 
   function handleCreate() {
     const s = defaultHeroState();
@@ -85,6 +84,9 @@ export default function HeroSheetFeature() {
         <button type="button" onClick={handleJsonImport}>
           JSON読み出し
         </button>
+        <button type="button" onClick={() => setUserCatalogOpenTick((n) => n + 1)}>
+          自作データ管理
+        </button>
       </div>
 
       <HeroSheet
@@ -102,6 +104,7 @@ export default function HeroSheetFeature() {
         onView={handleView}
         onSaveHistory={handleSaveHistory}
         onShare={handleShare}
+        userCatalogOpenTick={userCatalogOpenTick}
       />
     </div>
   );

@@ -1,7 +1,5 @@
-// src/pages/sheets/heroSheet/defaultHeroState.js
-import { defaultCatalogState } from "../defaultCatalogState.js";
-
-export function defaultHeroState() {
+// src/pages/sheets/divaSheet/defaultDivaState.js
+export function defaultDivaState() {
   return {
     version: 1,
     basic: {
@@ -56,7 +54,14 @@ export function defaultHeroState() {
       },
     },
     // ユーザが独自に定義したアイテム
-    userCatalog: defaultCatalogState(),
+    userCatalog: {
+      items: [],
+      weapons: [],
+      armors: [],
+      shields: [],
+      skills: [],
+      heroSkills: [],
+    },
     memo: "",
   };
 }

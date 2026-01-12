@@ -1,6 +1,6 @@
 // src/pages/sheets/heroSheet/sections/MemoSection.jsx
 import React from "react";
-import { ImeTextarea } from "../components/ImeTextarea.jsx";
+import { TextCell } from "../../components/TextCell.jsx";
 
 export function MemoSection({ model }) {
   const { s, editable, setField } = model;
@@ -9,10 +9,12 @@ export function MemoSection({ model }) {
     <section className="panel memo">
       <div className="panel-title">メモ</div>
 
-      <ImeTextarea
-        value={s?.memo ?? ""}
+      <TextCell
         editable={!!editable}
+        value={s?.memo ?? ""}
+        multiline
         minHeight={140}
+        placeholder=""
         onCommit={(v) => setField(["memo"], v)}
       />
     </section>

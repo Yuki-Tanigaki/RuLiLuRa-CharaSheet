@@ -59,7 +59,7 @@ export const SHIELDS_MASTER = [
     evadeMod: 0,
     defenseValue: 3,
     requirement: ["盾防御", 16],
-    memo: "この盾を装備している間は、《回避》スキルに＋５してよい"
+    memo: "この盾を装備している間は、《回避》スキルに＋５してよい(自動で反映されないため注意)"
   },
   {
     id: 3,

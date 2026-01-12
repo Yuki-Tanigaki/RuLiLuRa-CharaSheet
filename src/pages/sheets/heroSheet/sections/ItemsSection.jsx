@@ -55,9 +55,9 @@ export function ItemsSection({ model }) {
   }, [catalog]);
 
   const selectedCatalogItem = useMemo(() => {
-    const idn = Number(itemPicker.id);
-    if (!Number.isFinite(idn)) return null;
-    return catalog.find((c) => c.kind === itemPicker.kind && Number(c.id) === idn) ?? null;
+    const idStr = String(itemPicker.id ?? "");
+    if (!idStr) return null;
+    return catalog.find((c) => c.kind === itemPicker.kind && String(c.id) === idStr) ?? null;
   }, [catalog, itemPicker]);
 
   function buyWithMoney(item) {
@@ -72,7 +72,7 @@ export function ItemsSection({ model }) {
     if (moneyG < price) return;
 
     setField(["equipment", "moneyG"], (prev) => Math.max(0, (Number(prev) || 0) - price));
-    addToInventory(item.kind, Number(item.id), 1);
+    addToInventory(item.kind, item.id, 1);
   }
 
   function buyWithFp(item) {
@@ -87,7 +87,7 @@ export function ItemsSection({ model }) {
     if (fp < cost) return;
 
     setField(["equipment", "fp"], (prev) => Math.max(0, (Number(prev) || 0) - cost));
-    addToInventory(item.kind, Number(item.id), 1);
+    addToInventory(item.kind, item.id, 1);
   }
 
   function addOwned(item) {
@@ -96,7 +96,7 @@ export function ItemsSection({ model }) {
       grantAdventurerSetContents();
       return;
     }
-    addToInventory(item.kind, Number(item.id), 1);
+    addToInventory(item.kind, item.id, 1);
   }
 
   return (
@@ -162,7 +162,7 @@ export function ItemsSection({ model }) {
       ) : (
         <div style={{ display: "grid", gap: 6 }}>
           {inventory.map((e) => {
-            const def = catalog.find((c) => c.kind === e.kind && Number(c.id) === Number(e.id)) ?? null;
+            const def = catalog.find((c) => c.kind === e.kind && String(c.id) === String(e.id)) ?? null;
             const name = def?.name ?? "(unknown)";
             const suffix = e.qty >= 2 ? `（×${e.qty}）` : "";
             return (

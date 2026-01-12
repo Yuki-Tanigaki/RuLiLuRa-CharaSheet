@@ -67,12 +67,14 @@ export function catalogKeyOf(kind, id) {
 
 export function resolveCatalogRef(entry, catalog) {
   if (entry == null) return null;
+  const sameId = (a, b) => String(a) === String(b);
 
   if (typeof entry === "string") {
     const name = entry.trim();
     if (!name) return null;
     const hit = catalog.find(c => String(c.name ?? "").trim() === name);
-    return hit ? { kind: hit.kind, id: Number(hit.id), name: hit.name } : null;
+    // return hit ? { kind: hit.kind, id: Number(hit.id), name: hit.name } : null;
+    return hit ? { kind: hit.kind, id: hit.id, name: hit.name } : null;
   }
 
   if (typeof entry === "number") {
@@ -81,20 +83,31 @@ export function resolveCatalogRef(entry, catalog) {
 
     const priority = ["item", "weapon", "armor", "shield"];
     for (const k of priority) {
-      const hit = catalog.find(c => c.kind === k && c.id === id);
+      // const hit = catalog.find(c => c.kind === k && c.id === id);
+      const hit = catalog.find(c => c.kind === k && sameId(c.id, id));
       if (hit) return { kind: hit.kind, id, name: hit.name };
     }
-    const hitAny = catalog.find(c => c.id === id);
-    return hitAny ? { kind: hitAny.kind, id, name: hitAny.name } : null;
+    // const hitAny = catalog.find(c => c.id === id);
+    // return hitAny ? { kind: hitAny.kind, id, name: hitAny.name } : null;
+    const hitAny = catalog.find(c => sameId(c.id, id));
+    return hitAny ? { kind: hitAny.kind, id: hitAny.id, name: hitAny.name } : null;
   }
 
   if (typeof entry === "object") {
     const kind = String(entry.kind ?? entry.type ?? "").trim();
-    const id = safeNum(entry.id, NaN);
+    // const id = safeNum(entry.id, NaN);
 
-    if (kind && Number.isFinite(id)) {
-      const hit = catalog.find(c => c.kind === kind && c.id === id);
-      if (hit) return { kind, id, name: hit.name };
+    // if (kind && Number.isFinite(id)) {
+    //   const hit = catalog.find(c => c.kind === kind && c.id === id);
+    //   if (hit) return { kind, id, name: hit.name };
+    // }
+    const rawId = entry.id;
+    const idNum = typeof rawId === "number" ? rawId : Number(rawId);
+    const id = Number.isFinite(idNum) ? idNum : (rawId == null ? null : String(rawId));
+
+    if (kind && id != null && String(id).trim() !== "") {
+      const hit = catalog.find(c => c.kind === kind && sameId(c.id, id));
+      if (hit) return { kind, id: hit.id, name: hit.name };
     }
 
     const name = String(entry.name ?? "").trim();

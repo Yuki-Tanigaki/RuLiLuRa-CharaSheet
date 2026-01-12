@@ -1,7 +1,7 @@
 // src/pages/sheets/heroSheet/sections/SkillsSection.jsx
 import React, { useEffect, useMemo, useRef } from "react";
-import { TextCell } from "../components/TextCell.jsx";
-import { NumCell } from "../components/NumCell.jsx";
+import { TextCell } from "../../components/TextCell.jsx";
+import { NumCell } from "../../components/NumCell.jsx";
 import { catalogKeyOf, kindLabel, safeNum } from "../heroSheetUtils.js";
 
 const CREATE_SKILL_COUNT = 8;
@@ -68,7 +68,7 @@ export function SkillsSection({ model }) {
   const canUseDexBonus = safeNum(dexBonusValue, 0) > 0;
 
   // -----------------------------
-  // ★重要：create初期化は “入った最初の1回だけ”
+  // create初期化は “入った最初の1回だけ”
   // setField が毎回新しくてもリセットされないようにする
   // -----------------------------
   const didInitCreateRef = useRef(false);
@@ -410,6 +410,7 @@ export function SkillsSection({ model }) {
   function BonusPicker({ type, value, draftTargets }) {
     const canUse = value > 0;
     if (!isCreate) return null;
+    const locked = bonusConfirmed; // 確定後はロック
 
     if (!canUse) {
       return (
@@ -423,6 +424,7 @@ export function SkillsSection({ model }) {
     const t1 = draftTargets?.[1] ?? "";
 
     function setAt(pos, v) {
+      if (locked) return; // 確定後は変更させない
       const next = [t0, t1];
       next[pos] = v === "" ? "" : Number(v);
 
@@ -444,7 +446,13 @@ export function SkillsSection({ model }) {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <select className="sheet-input" value={t0 === "" ? "" : String(t0)} onChange={(e) => setAt(0, e.target.value)}>
+          <select 
+            className="sheet-input" 
+            value={t0 === "" ? "" : String(t0)} 
+            onChange={(e) => setAt(0, e.target.value)}
+            disabled={locked}
+            title={locked ? "確定済みです（変更をクリックすると選び直せます）" : ""}
+            >
             <option value="">（未選択）</option>
             {selectableSkillRows.map((r) => (
               <option key={`b0-${r.index}`} value={String(r.index)}>
@@ -453,7 +461,13 @@ export function SkillsSection({ model }) {
             ))}
           </select>
 
-          <select className="sheet-input" value={t1 === "" ? "" : String(t1)} onChange={(e) => setAt(1, e.target.value)}>
+          <select 
+            className="sheet-input" 
+            value={t1 === "" ? "" : String(t1)} 
+            onChange={(e) => setAt(1, e.target.value)}
+            disabled={locked}
+            title={locked ? "確定済みです（変更をクリックすると選び直せます）" : ""}
+          >
             <option value="">（未選択）</option>
             {selectableSkillRows.map((r) => (
               <option key={`b1-${r.index}`} value={String(r.index)}>
@@ -560,7 +574,7 @@ export function SkillsSection({ model }) {
       {isCreate && (
         <div style={{ marginBottom: 8, fontSize: 12, opacity: 0.85, lineHeight: 1.6 }}>
           ※ createモードではスキル数は <b>8つ固定</b> です。<br />
-          ※ 基本Lvは <b>5 / 10 / 15 / 20</b> から選択できます（ボーナス適用後はこの限りではありません）。<br />
+          ※ 基本Lvは <b>5 / 10 / 15 / 20</b> から選択できます。<br />
           <span style={{ opacity: 0.9 }}>
             基本Lv合計（ボーナス除外）:{" "}
             <b style={{ color: baseSumOk ? "inherit" : "crimson" }}>
@@ -709,7 +723,7 @@ export function SkillsSection({ model }) {
               - <b>スキルへの【知力】ボーナス</b>：知力の能力修正がプラスなら、選んだスキル2つまでに修正値を加算できます。
             </div>
             <div>
-              - <b>スキルへの【器用さ】ボーナス</b>：器用さの能力修正がプラスなら、同様にスキル2つまでに修正値を加算できます。
+              - <b>スキルへの【器用さ】ボーナス</b>：器用さの能力修正がプラスなら、スキル2つまでに修正値を加算できます。
             </div>
             <div style={{ opacity: 0.75 }}>
               ※ ここでは対象を選ぶだけで、Lvは変わりません。<br />
