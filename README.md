@@ -15,11 +15,6 @@ nvm install 22
 nvm use 22
 node -v
 npm -v
-```
-
-# Vite + Reactでレポジトリ作成
-```
-npm create vite@latest . -- --template react
 npm install
 npm install lz-string
 ```
