@@ -1,23 +1,26 @@
 // src/pages/sheets/heroSheet/useHeroSheetModel.js
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import { SKILLS_MASTER, SKILL_ID_EVADE } from "../../../data/skillsMaster.js";
 import { HERO_SKILLS_MASTER } from "../../../data/heroSkillsMaster.js";
 import { WEAPONS_MASTER } from "../../../data/weaponsMaster.js";
 import { ARMORS_MASTER } from "../../../data/armorsMaster.js";
 import { SHIELDS_MASTER } from "../../../data/shieldsMaster.js";
-import { ITEMS_MASTER } from "../../../data/itemsMaster.js";
+import { TOOLS_MASTER } from "../../../data/toolsMaster.js";
 
-import {
-  calcHeroDerived,
-  fmtSigned,
-  safeNum,
-  skillLabelFromMaster,
-  parseEvadeSkillBonusFromText,
-  normalizeRequirement,
-  normalizeThresholdKey,
-  resolveCatalogRef,
-  catalogKeyOf,
-} from "./heroSheetUtils.js";
+import { useSetField } from "../common/useSetField.js";
+import { safeNum } from "../common/utils/number.js";
+import { fmtSigned } from "../common/utils/format.js";
+import { normalizeRequirement, normalizeThresholdKey, labelFromMaster } from "../common/normalize.js";
+import { resolveCatalogRef, catalogKeyOf } from "../common/catalog.js";
+import { normalizeInventory as normalizeInv, addQty } from "../common/inventory.js";
+import { normalizeUnlock } from "../common/unlockItems.js";
+
+import { loadUserCatalog } from "../common/userCatalog.js";
+
+// hero 固有
+import { calcHeroDerived } from "./derivatives.js";
+import { parseEvadeSkillBonusFromText } from "./combat.js";
 
 export function useHeroSheetModel({ state, mode, setState }) {
   const s = state;
@@ -25,144 +28,41 @@ export function useHeroSheetModel({ state, mode, setState }) {
   const isCreate = mode === "create";
   const itemsEditable = editable && !isCreate;
 
-  const d = calcHeroDerived(s);
-  const a = s.abilities ?? {};
+  const setField = useSetField(setState);
+
+  // ---- derived ----
+  const d = useMemo(() => calcHeroDerived(s), [s]);
+  const a = s?.abilities ?? {};
   const mods = d?.mods ?? {};
   const hp = d?.hp ?? { hpNormal: 0, hpWound: 0, mp: 0 };
 
-  // ---- setField ----
-  function setField(path, valueOrFn) {
-    if (!setState) return;
-    setState((prev) => {
-      const next = structuredClone(prev);
-      let cur = next;
-      for (let i = 0; i < path.length - 1; i++) {
-        const key = path[i];
-        if (cur[key] == null || typeof cur[key] !== "object") cur[key] = {};
-        cur = cur[key];
-      }
-      const lastKey = path[path.length - 1];
-      const prevVal = cur[lastKey];
-      cur[lastKey] = typeof valueOrFn === "function" ? valueOrFn(prevVal) : valueOrFn;
-      return next;
-    });
-  }
-
   // =========================
-  // userCatalog (ブラウザごと)
+  // userCatalog (shared; read-only)
   // =========================
-  const USER_CATALOG_KEY = "rulilura.userCatalog.v1";
+  const [userCatalog, setUserCatalog] = useState(() => loadUserCatalog({ scope: "shared" }));
 
-  function safeParseJson(raw, fallback) {
-    try {
-      return raw ? JSON.parse(raw) : fallback;
-    } catch {
-      return fallback;
-    }
-  }
-
-  function normalizeUserCatalog(uc) {
-    const o = uc && typeof uc === "object" ? uc : {};
-    const arr = (x) => (Array.isArray(x) ? x : []);
-    return {
-      items: arr(o.items),
-      weapons: arr(o.weapons),
-      armors: arr(o.armors),
-      shields: arr(o.shields),
-      skills: arr(o.skills),
-      heroSkills: arr(o.heroSkills),
-    };
-  }
-
-  function loadUserCatalogFromStorage() {
-    return normalizeUserCatalog(safeParseJson(localStorage.getItem(USER_CATALOG_KEY), {}));
-  }
-
-  function saveUserCatalogToStorage(uc) {
-    try {
-      localStorage.setItem(USER_CATALOG_KEY, JSON.stringify(normalizeUserCatalog(uc)));
-    } catch {
-      // ignore
-    }
-  }
-
-  const userCatalog = normalizeUserCatalog(s?.userCatalog);
-
-  // state.userCatalog が無い/未初期化なら localStorage から注入（初回のみ）
-  const didInitUserCatalog = useRef(false);
+  // 別タブ更新: storage event
+  // 同一タブ更新: 任意のカスタムイベント（Catalog側で dispatch して運用）
   useEffect(() => {
-    if (didInitUserCatalog.current) return;
-    didInitUserCatalog.current = true;
-
-    const hasAny =
-      Array.isArray(s?.userCatalog?.items) ||
-      Array.isArray(s?.userCatalog?.weapons) ||
-      Array.isArray(s?.userCatalog?.armors) ||
-      Array.isArray(s?.userCatalog?.shields) ||
-      Array.isArray(s?.userCatalog?.skills) ||
-      Array.isArray(s?.userCatalog?.heroSkills);
-
-    if (!hasAny) {
-      const loaded = loadUserCatalogFromStorage();
-      setField(["userCatalog"], loaded);
+    function reload() {
+      setUserCatalog(loadUserCatalog({ scope: "shared" }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    function onStorage() {
+      reload();
+    }
+    function onCustom() {
+      reload();
+    }
+
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("rulilura:userCatalog-updated", onCustom);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("rulilura:userCatalog-updated", onCustom);
+    };
   }, []);
 
-  function uid(prefix) {
-    return `${prefix}_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
-  }
-
-  function upsertUserCatalog(nextUc) {
-    const normalized = normalizeUserCatalog(nextUc);
-    setField(["userCatalog"], normalized);
-    saveUserCatalogToStorage(normalized);
-  }
-
-  function addUserCatalogEntry(listKey, entry) {
-    const key = String(listKey);
-    const e = entry && typeof entry === "object" ? entry : {};
-    const id = String(e.id ?? uid(`u_${key.slice(0, -1)}`));
-    const name = String(e.name ?? "").trim();
-    if (!name) return null;
-
-    const next = { ...userCatalog };
-    const cur = Array.isArray(next[key]) ? next[key].slice() : [];
-    const idx = cur.findIndex((x) => String(x?.id) === id);
-    const row = { ...e, id, name };
-
-    if (idx >= 0) cur[idx] = row;
-    else cur.unshift(row);
-
-    next[key] = cur;
-    upsertUserCatalog(next);
-    return id;
-  }
-
-  function removeUserCatalogEntry(listKey, id) {
-    const key = String(listKey);
-    const idStr = String(id);
-    const next = { ...userCatalog };
-    next[key] = (Array.isArray(next[key]) ? next[key] : []).filter((x) => String(x?.id) !== idStr);
-    upsertUserCatalog(next);
-  }
-
-  // ItemsSection が使う：独自アイテム作成（最小）
-  function createUserItem({ name, price, fp: fpCost, memo }) {
-    const entry = {
-      id: uid("u_item"),
-      name: String(name ?? "").trim(),
-      price: price === "" || price == null ? null : Number(price),
-      fp: fpCost === "" || fpCost == null ? null : Number(fpCost),
-      memo: String(memo ?? "").trim(),
-    };
-    if (!entry.name) return null;
-    if (entry.price != null && !Number.isFinite(entry.price)) entry.price = null;
-    if (entry.fp != null && !Number.isFinite(entry.fp)) entry.fp = null;
-    return addUserCatalogEntry("items", entry);
-  }
-
-  // ---- catalog (masters + userCatalog) ----
+  // ---- catalog (masters + userCatalog(shared)) ----
   const catalog = useMemo(() => {
     const w = (Array.isArray(WEAPONS_MASTER) ? WEAPONS_MASTER : []).map((x) => ({
       kind: "weapon",
@@ -179,44 +79,23 @@ export function useHeroSheetModel({ state, mode, setState }) {
       source: "master",
       ...x,
     }));
-    const it = (Array.isArray(ITEMS_MASTER) ? ITEMS_MASTER : []).map((x) => ({
-      kind: "item",
+    const it = (Array.isArray(TOOLS_MASTER) ? TOOLS_MASTER : []).map((x) => ({
+      kind: "tool",
       source: "master",
       ...x,
     }));
 
-    const uw = userCatalog.weapons.map((x) => ({ kind: "weapon", source: "user", ...x }));
-    const ua = userCatalog.armors.map((x) => ({ kind: "armor", source: "user", ...x }));
-    const ush = userCatalog.shields.map((x) => ({ kind: "shield", source: "user", ...x }));
-    const uit = userCatalog.items.map((x) => ({ kind: "item", source: "user", ...x }));
-    const usk = userCatalog.skills.map((x) => ({ kind: "skill", source: "user", ...x }));
-    const uhs = userCatalog.heroSkills.map((x) => ({ kind: "heroSkill", source: "user", ...x }));
+    const uw = (userCatalog.weapons ?? []).map((x) => ({ kind: "weapon", source: "user", ...x }));
+    const ua = (userCatalog.armors ?? []).map((x) => ({ kind: "armor", source: "user", ...x }));
+    const ush = (userCatalog.shields ?? []).map((x) => ({ kind: "shield", source: "user", ...x }));
+    const uit = (userCatalog.tools ?? []).map((x) => ({ kind: "tool", source: "user", ...x }));
+
+    // unlock 等の参照解決に使うため、スキル系も混ぜる
+    const usk = (userCatalog.skills ?? []).map((x) => ({ kind: "skill", source: "user", ...x }));
+    const uhs = (userCatalog.heroSkills ?? []).map((x) => ({ kind: "heroSkill", source: "user", ...x }));
 
     return [...w, ...a2, ...sh, ...it, ...uw, ...ua, ...ush, ...uit, ...usk, ...uhs];
   }, [userCatalog]);
-
-  function normalizeInventory(inv) {
-    if (!Array.isArray(inv)) return [];
-    return inv
-      .map((x) =>
-        x && typeof x === "object" && "kind" in x && "id" in x
-          ? {
-              kind: String(x.kind),
-              // masterは number、独自は string を許容
-              id:
-                typeof x.id === "number" && Number.isFinite(x.id)
-                  ? x.id
-                  : String(x.id),
-              qty: Math.max(1, Number(x.qty ?? 1) || 1),
-            }
-          : null
-      )
-      .filter(Boolean);
-  }
-
-  const inventory = normalizeInventory(s?.equipment?.inventory);
-  const moneyG = safeNum(s?.equipment?.moneyG, 0);
-  const fp = safeNum(s?.equipment?.fp, 0);
 
   function defByKindId(kind, id) {
     const k = String(kind);
@@ -225,30 +104,28 @@ export function useHeroSheetModel({ state, mode, setState }) {
     return catalog.find((c) => c.kind === k && String(c.id) === idStr) ?? null;
   }
 
-  // ---- inventory操作 ----
+  // =========================
+  // inventory / money / fp
+  // =========================
+  const inventory = useMemo(() => normalizeInv(s?.equipment?.inventory), [s?.equipment?.inventory]);
+  const moneyG = safeNum(s?.equipment?.moneyG, 0);
+  const fp = safeNum(s?.equipment?.fp, 0);
+
   function addToInventory(kind, id, qty = 1) {
-    setField(["equipment", "inventory"], (prev) => {
-      const cur = normalizeInventory(prev);
-      const key = catalogKeyOf(kind, id);
-      const idx = cur.findIndex((e) => catalogKeyOf(e.kind, e.id) === key);
-      if (idx >= 0) {
-        const next = cur.slice();
-        next[idx] = { ...next[idx], qty: next[idx].qty + qty };
-        return next;
-      }
-      return [...cur, { kind, id, qty: Math.max(1, Number(qty) || 1) }];
-    });
+    setField(["equipment", "inventory"], (prev) => addQty(prev, kind, id, qty));
   }
 
   function removeFromInventory(kind, id) {
     setField(["equipment", "inventory"], (prev) => {
-      const cur = normalizeInventory(prev);
+      const cur = normalizeInv(prev);
       const key = catalogKeyOf(kind, id);
       return cur.filter((e) => catalogKeyOf(e.kind, e.id) !== key);
     });
   }
 
-  // ---- skills master ----
+  // =========================
+  // masters: skills / heroSkills
+  // =========================
   const masterSkills = Array.isArray(SKILLS_MASTER) ? SKILLS_MASTER : [];
   const masterById = useMemo(() => {
     const m = new Map();
@@ -260,7 +137,6 @@ export function useHeroSheetModel({ state, mode, setState }) {
     return m;
   }, [masterSkills]);
 
-  // ---- hero skills master ----
   const masterHeroSkills = Array.isArray(HERO_SKILLS_MASTER) ? HERO_SKILLS_MASTER : [];
   const heroMasterById = useMemo(() => {
     const m = new Map();
@@ -272,30 +148,21 @@ export function useHeroSheetModel({ state, mode, setState }) {
     return m;
   }, [masterHeroSkills]);
 
-  const skillRows = s.skills?.rows ?? [];
-  const intBonusTargets = Array.isArray(s.skills?.intBonusTargets) ? s.skills.intBonusTargets : [];
-  const dexBonusTargets = Array.isArray(s.skills?.dexBonusTargets) ? s.skills.dexBonusTargets : [];
+  // =========================
+  // skills rows / labels / effective lv
+  // =========================
+  const skillRows = s?.skills?.rows ?? [];
+  const intBonusTargets = Array.isArray(s?.skills?.intBonusTargets) ? s.skills.intBonusTargets : [];
+  const dexBonusTargets = Array.isArray(s?.skills?.dexBonusTargets) ? s.skills.dexBonusTargets : [];
 
   const intBonusValue = Math.max(0, safeNum(mods.int, 0));
   const dexBonusValue = Math.max(0, safeNum(mods.dex, 0));
-
-  const heroSkillRows = s.heroSkills?.rows ?? [];
-  function heroRowLabel(row) {
-    if (!row) return "—";
-    if (row.kind === "master") {
-      const sk = heroMasterById.get(Number(row.id));
-      // hero skill master は {id, name} 想定
-      return String(sk?.name ?? "").trim() || "—";
-    }
-    if (row.kind === "custom") return String(row.name ?? "").trim() || "—";
-    return "—";
-  }
 
   function rowLabel(row) {
     if (!row) return "—";
     if (row.kind === "master") {
       const sk = masterById.get(Number(row.id));
-      return sk ? skillLabelFromMaster(sk) : "—";
+      return sk ? labelFromMaster(sk) : "—";
     }
     if (row.kind === "custom") return String(row.name ?? "").trim() || "—";
     return "—";
@@ -330,7 +197,7 @@ export function useHeroSheetModel({ state, mode, setState }) {
         const id = Number(r?.id);
         if (Number.isFinite(id)) {
           const sk = masterById.get(id);
-          update(skillLabelFromMaster(sk), eff);
+          update(labelFromMaster(sk), eff);
         }
       } else if (r?.kind === "custom") {
         update(String(r?.name ?? "").trim(), eff);
@@ -355,7 +222,24 @@ export function useHeroSheetModel({ state, mode, setState }) {
     return { met, penalty: met ? 0 : -20, name, min: Number(min), lv };
   }
 
-  // ---- 回避/武器命中など（必要分だけここに集約） ----
+  // =========================
+  // hero skills
+  // =========================
+  const heroSkillRows = s?.heroSkills?.rows ?? [];
+
+  function heroRowLabel(row) {
+    if (!row) return "—";
+    if (row.kind === "master") {
+      const sk = heroMasterById.get(Number(row.id));
+      return String(sk?.name ?? "").trim() || "—";
+    }
+    if (row.kind === "custom") return String(row.name ?? "").trim() || "—";
+    return "—";
+  }
+
+  // =========================
+  // combat derived
+  // =========================
   const eq = s?.equipment?.equipped ?? {};
   const wR = defByKindId("weapon", eq.weaponRightId);
   const wL = defByKindId("weapon", eq.weaponLeftId);
@@ -395,16 +279,16 @@ export function useHeroSheetModel({ state, mode, setState }) {
   const evadeMod10Base = Math.floor(evadeRawBase / 10) * 10;
   const evadeMod10 = evadeMod10Base + armorEvadeMod + shieldEvadeMod + shieldRequirementPenalty;
 
+  // 装備品の表示
   const equippedWeapons = useMemo(() => {
-    if (eq.weaponTwoHanded) return wR ? [{ slot: "両手", w: wR }] : [];
     const list = [];
-    if (wR) list.push({ slot: "右手", w: wR });
-    if (wL) list.push({ slot: "左手", w: wL });
+    if (wR) list.push({ pos: "right", w: wR, id: eq.weaponRightId });
+    if (wL) list.push({ pos: "left", w: wL, id: eq.weaponLeftId });
     return list;
-  }, [eq.weaponTwoHanded, wR, wL]);
+  }, [wR, wL, eq.weaponRightId, eq.weaponLeftId]);
 
   const weaponHitRows = useMemo(() => {
-    return equippedWeapons.map(({ slot, w }) => {
+    return equippedWeapons.map(({ pos, w }) => {
       const baseHit = safeNum(w?.baseHit, 0);
       const isMelee = (w?.range ?? "") === "白";
       const combatMod = isMelee ? meleeMod : rangedMod;
@@ -415,76 +299,91 @@ export function useHeroSheetModel({ state, mode, setState }) {
       const req = requirementPenalty(w?.requirement);
       const finalHit = baseHit + combatMod + weaponSkillLevel + req.penalty;
 
-      return { slot, w, baseHit, combatMod, weaponSkillName, weaponSkillLevel, req, finalHit };
+      const gripLabel = (w?.grip ?? "") === "両手" ? "両手" : "片手";
+
+      return {
+        grip: gripLabel,
+        pos,
+        w,
+        baseHit,
+        combatMod,
+        weaponSkillName,
+        weaponSkillLevel,
+        req,
+        finalHit,
+      };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [equippedWeapons, meleeMod, rangedMod, skillLevelByName]);
 
-  // ---- unlock（フリーアイテム） ----
-  function extractUnlockFromSkillMaster(skill) {
-    const unlock = skill?.unlock ?? skill?.unlocks ?? skill?.freeUnlock ?? skill?.free ?? null;
-    if (!unlock) return [];
-    const rows = [];
+  // =========================
+  // unlock（create時の無料獲得）
+  // =========================
 
-    if (Array.isArray(unlock)) {
-      for (const entry of unlock) {
-        if (entry && typeof entry === "object") {
-          const th = normalizeThresholdKey(entry.threshold ?? entry.value ?? entry.level ?? entry.req ?? entry.at);
-          const list = entry.items ?? entry.rewards ?? entry.reward ?? entry.obtain ?? entry.gain ?? entry.list;
-          if (!Number.isFinite(th) || th == null) continue;
-          const rewardsRaw = Array.isArray(list) ? list : list != null ? [list] : [];
-          const rewards = rewardsRaw.map((x) => resolveCatalogRef(x, catalog)).filter(Boolean);
-          if (rewards.length > 0) rows.push({ threshold: th, rewards });
-        }
-      }
-      return rows;
-    }
-
-    if (typeof unlock === "object") {
-      for (const [k, v] of Object.entries(unlock)) {
-        const th = normalizeThresholdKey(k);
-        if (!Number.isFinite(th) || th == null) continue;
-        const rewardsRaw = Array.isArray(v) ? v : v != null ? [v] : [];
-        const rewards = rewardsRaw.map((x) => resolveCatalogRef(x, catalog)).filter(Boolean);
-        if (rewards.length > 0) rows.push({ threshold: th, rewards });
-      }
-      return rows;
-    }
-
-    return [];
-  }
-
-  function unlockRowsBySkillName(skillName) {
+  function skillDefByName(skillName) {
     const nm = String(skillName ?? "").trim();
-    if (!nm) return [];
-    const hit =
-      masterSkills.find((sk) => String(skillLabelFromMaster(sk)).trim() === nm) ??
+    if (!nm) return null;
+
+    // master（表示ラベル一致優先）
+    const m =
+      masterSkills.find((sk) => String(labelFromMaster(sk)).trim() === nm) ??
       masterSkills.find((sk) => String(sk?.name ?? sk?.label ?? sk?.skillName ?? "").trim() === nm) ??
       null;
-    if (!hit) return [];
-    return extractUnlockFromSkillMaster(hit).slice().sort((p, q) => p.threshold - q.threshold);
+    if (m) return { kind: "skill", source: "master", ...m };
+
+    // user（shared catalog）
+    const u = (userCatalog.skills ?? []).find((x) => String(x?.name ?? "").trim() === nm) ?? null;
+    if (u) return { kind: "skill", source: "user", ...u };
+
+    return null;
+  }
+
+  // ItemsSection から使うので関数として分離
+  function unlockRowsBySkillName(skillName) {
+    const def = skillDefByName(skillName);
+    if (!def?.unlock) return [];
+
+    const rows = normalizeUnlock(def.unlock);
+    const out = [];
+
+    for (const r of rows) {
+      const th = normalizeThresholdKey(r.at);
+      if (th == null) continue;
+
+      const rewards = (r.refs ?? []).map((ref) => resolveCatalogRef(ref, catalog)).filter(Boolean);
+
+      if (rewards.length > 0) out.push({ threshold: th, rewards });
+    }
+
+    return out.slice().sort((p, q) => p.threshold - q.threshold);
   }
 
   const createUnlockTargets = useMemo(() => {
     if (!isCreate) return [];
     const rows = Array.isArray(skillRows) ? skillRows : [];
     const out = [];
+
     for (let i = 0; i < rows.length; i++) {
       const label = rowLabel(rows[i]);
       if (!label || label === "—") continue;
+
       const unlockRows = unlockRowsBySkillName(label);
       if (!unlockRows || unlockRows.length === 0) continue;
+
       const lv = rowEffectiveLevel(i);
       out.push({ label, level: lv, unlockRows });
     }
+
+    // 同名スキルは最大Lvのみ残す
     const map = new Map();
     for (const x of out) {
       const prev = map.get(x.label);
       if (!prev || x.level > prev.level) map.set(x.label, x);
     }
+
     return [...map.values()].sort((p, q) => String(p.label).localeCompare(String(q.label), "ja"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreate, skillRows, intBonusTargets, dexBonusTargets, intBonusValue, dexBonusValue]);
+  }, [isCreate, skillRows, intBonusTargets, dexBonusTargets, intBonusValue, dexBonusValue, userCatalog, catalog]);
 
   return {
     // flags
@@ -519,7 +418,7 @@ export function useHeroSheetModel({ state, mode, setState }) {
     getSkillLevel,
     requirementPenalty,
 
-    // hero skills (for HeroSkillsSection)
+    // hero skills
     masterHeroSkills,
     heroMasterById,
     heroSkillRows,
@@ -548,13 +447,10 @@ export function useHeroSheetModel({ state, mode, setState }) {
     unlockRowsBySkillName,
     createUnlockTargets,
 
-    // user catalog
+    // user catalog（read-only）
     userCatalog,
-    createUserItem,
-    addUserCatalogEntry,
-    removeUserCatalogEntry,
 
-    // format helper re-export if you want
+    // format helper re-export
     fmtSigned,
   };
 }

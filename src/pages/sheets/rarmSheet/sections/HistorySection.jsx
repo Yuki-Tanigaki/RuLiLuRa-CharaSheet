@@ -1,4 +1,4 @@
-// src/pages/sheets/heroSheet/sections/HistorySection.jsx
+// src/pages/sheets/rarmSheet/sections/HistorySection.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import {
   loadHistory,
@@ -21,7 +21,7 @@ function tagsToString(tags) {
   return tags.join(", ");
 }
 
-export function HistorySection({ sheetType = "hero", onRestoreState }) {
+export function HistorySection({ sheetType = "rarm", onRestoreState }) {
   const [list, setList] = useState([]);
 
   // ★タグ入力のローカル編集状態（id -> string）

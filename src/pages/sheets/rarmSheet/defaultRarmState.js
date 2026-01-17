@@ -1,5 +1,5 @@
 // src/pages/sheets/heroSheet/defaultHeroState.js
-import { defaultCatalogState } from "../catalogSheet/defaultCatalogState.js";
+import { defaultCatalogState } from "../defaultCatalogState.js";
 
 export function defaultHeroState() {
   return {
@@ -50,11 +50,12 @@ export function defaultHeroState() {
       equipped: {
         weaponRightId: null,
         weaponLeftId: null,
+        weaponTwoHanded: false,
         armorId: null,
         shieldId: null,
       },
     },
-    // ユーザが独自に定義したカタログ
+    // ユーザが独自に定義したアイテム
     userCatalog: defaultCatalogState(),
     memo: "",
   };

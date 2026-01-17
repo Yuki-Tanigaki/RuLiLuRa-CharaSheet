@@ -1,6 +1,7 @@
 // src/pages/sheets/heroSheet/components/NumCell.jsx
 import React from "react";
-import { clamp, joinClass, safeNum, toNumOrNull } from "../heroSheet/heroSheetUtils.js";
+import { clamp, safeNum, toNumOrNull } from "../common/utils/number.js";
+import { joinClass } from "../common/utils/format.js";
 
 function showNum(v) {
   const x = toNumOrNull(v);

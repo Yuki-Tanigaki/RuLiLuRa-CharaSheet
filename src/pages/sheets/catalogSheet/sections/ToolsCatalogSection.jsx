@@ -1,0 +1,1 @@
+// src/pages/sheets/catalogSheet/sections/ToolsCatalogSection.jsx

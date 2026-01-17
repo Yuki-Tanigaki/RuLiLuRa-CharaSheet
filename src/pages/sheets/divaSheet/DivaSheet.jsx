@@ -1,21 +1,22 @@
-// src/pages/sheets/heroSheet/HeroSheet.jsx
-import React, { useEffect, useState } from "react";
-import "../../../styles/sheet.css";
+// src/pages/sheets/divaSheet/DivaSheet.jsx
+import React from "react";
+import "../../../styles/diva_sheet.css";
 
-import { defaultHeroState } from "./defaultHeroState.js";
-import { useHeroSheetModel } from "./useHeroSheetModel.js";
+import { defaultDivaState } from "./defaultDivaState.js";
+import { useDivaSheetModel } from "./useDivaSheetModel.js";
 
+// sections
 import { HeaderSection } from "./sections/HeaderSection.jsx";
 import { SkillsSection } from "./sections/SkillsSection.jsx";
 import { HeroSkillsSection } from "./sections/HeroSkillsSection.jsx";
-import { ItemsSection } from "./sections/ItemsSection.jsx";
-import { SideEquipmentSection } from "./sections/SideEquipmentSection.jsx";
+import { DivaSkillsSection } from "./sections/DivaSkillsSection.jsx";
+// import { DivaActionsSection } from "./sections/DivaActionsSection.jsx";
+// import { DivaStatusSection } from "./sections/DivaStatusSection.jsx";
+// import { NgsSection } from "./sections/NgsSection.jsx";
 import { MemoSection } from "./sections/MemoSection.jsx";
 import { HistorySection } from "./sections/HistorySection.jsx";
-import { UserCatalogModal } from "../UserCatalogModal.jsx";
 
-
-export default function HeroSheet(props) {
+export default function DivaSheet(props) {
   const {
     state,
     mode = "view",
@@ -26,17 +27,11 @@ export default function HeroSheet(props) {
     onView,
     onSaveHistory,
     onShare,
-    userCatalogOpenTick = 0,
   } = props;
 
-  const s = state ?? defaultHeroState();
-  const m = useHeroSheetModel({ state: s, mode, setState });
+  const s = state ?? defaultDivaState();
+  const m = useDivaSheetModel({ state: s, mode, setState });
   const editable = !!m.editable;
-
-  const [userCatalogOpen, setUserCatalogOpen] = useState(false);
-  useEffect(() => {
-    if (userCatalogOpenTick > 0) setUserCatalogOpen(true);
-  }, [userCatalogOpenTick]);
 
   const isCreateMode = mode === "create";
 
@@ -58,8 +53,7 @@ export default function HeroSheet(props) {
   const createBtnDisabled = isCreateMode ? !onView : !onCreate;
 
   return (
-    <div className="page sheet hero-sheet">
-      <UserCatalogModal model={m} open={userCatalogOpen} onClose={() => setUserCatalogOpen(false)} />
+    <div className="page sheet diva-sheet diva-sheet">
       {/* Toolbar */}
       <div
         className="toolbar"
@@ -112,18 +106,23 @@ export default function HeroSheet(props) {
             <div className="grid-bottom">
               <SkillsSection model={m} />
               <HeroSkillsSection model={m} />
-              <ItemsSection model={m} />
+              <DivaSkillsSection model={m} />
             </div>
+
+            {/* <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+              <DivaActionsSection model={m} />
+              <NgsSection model={m} />
+            </div> */}
 
             <div className="footer-meta">ver {m?.s?.version ?? s.version}</div>
           </div>
         </div>
 
         <div className="sheet-scroll side-scroll">
-          <SideEquipmentSection model={m} />
+          {/* <DivaStatusSection model={m} /> */}
           <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
-              <MemoSection model={m} />
-              <HistorySection sheetType="hero" onRestoreState={setState} />
+            <MemoSection model={m} />
+            <HistorySection sheetType="diva" onRestoreState={setState} />
           </div>
         </div>
       </div>

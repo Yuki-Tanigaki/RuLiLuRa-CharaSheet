@@ -8,9 +8,9 @@ export function defaultDivaState() {
       age: "",
       gender: "",
       nationality: "",
-      job: "",
-      heroLevel: 1,
-      pairExp: 0,
+      divaLevel: 1,
+      rank: 1,
+      exp: 0,
     },
     abilities: {
       method: "point",
@@ -21,24 +21,38 @@ export function defaultDivaState() {
       int: 10,
       psy: 10,
     },
-    // HP MP値などに対する補正値
+    // HP値に対する補正値
     resources: {
       hpNormalRv: 0,
       hpWoundRv: 0,
-      mpRv: 0,
     },
     // スキル
     skills: {
       // 可変長（最初は空でOK）
       rows: [],
-      intBonusTargets: [],
-      dexBonusTargets: [],
-      // create時の「無料獲得」管理
-      freeItemPicks: {},   // { [skillName]: "kind:id" }
-      freeItemClaims: {},  // { [skillName]: true }
     },
     // 英雄スキル
     heroSkills: {
+      rows: [],
+    },
+    // 歌姫スキル
+    divaSkills: {
+      rows: [],
+    },
+    // 歌姫アクション
+    divaActions: {
+      rows: [],
+    },
+    // 歌姫ステータス
+    divaStatuses: {
+      affinityLevel: 1,
+      physicalLoss: 0,
+      mentalLoss: 0,
+      bondLoss: 0,
+      bondGain: 0
+    },
+    // NG行動
+    ngs: {
       rows: [],
     },
     equipment: {
@@ -48,20 +62,12 @@ export function defaultDivaState() {
       equipped: {
         weaponRightId: null,
         weaponLeftId: null,
-        weaponTwoHanded: false,
         armorId: null,
         shieldId: null,
       },
     },
-    // ユーザが独自に定義したアイテム
-    userCatalog: {
-      items: [],
-      weapons: [],
-      armors: [],
-      shields: [],
-      skills: [],
-      heroSkills: [],
-    },
+    // ユーザが独自に定義したカタログ
+    userCatalog: defaultCatalogState(),
     memo: "",
   };
 }

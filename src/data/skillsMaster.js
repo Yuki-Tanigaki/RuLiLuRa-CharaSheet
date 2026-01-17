@@ -1,3 +1,5 @@
+// src/data/skillsMaster.js
+
 /**
  * スキルマスター
  * - categories: カテゴリを配列で保持（例: ["戦闘", "近代戦"]）
@@ -195,8 +197,15 @@ export const SKILLS_MASTER = [
   }},
 ];
 
-// よく参照するID（必要になったら追加していく）
+// よく参照するID定数
+// 回避
 export const SKILL_ID_EVADE = 6;
+// 歌姫の固定スキル（初期配布）
+export const SKILL_ID_ARCHAIA_KNOWLEDGE = 20; // アーカイア知識
+export const SKILL_ID_DIVA_ART_KNOWLEDGE = 21; // 歌術知識
+export const SKILL_ID_BUG_KNOWLEDGE = 22; // 蟲知識
+export const SKILL_ID_HIDE = 24; // 隠蔽
+export const SKILL_ID_COOKING = 31; // 料理
 
 // -------- 取得ユーティリティ --------
 

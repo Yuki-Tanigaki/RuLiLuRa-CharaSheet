@@ -1,4 +1,4 @@
-// src/pages/sheets/heroSheet/sections/HeaderSection.jsx
+// src/pages/sheets/divaSheet/sections/HeaderSection.jsx
 import React, { useMemo, useState } from "react";
 import { TextCell } from "../../components/TextCell.jsx";
 import { NumCell } from "../../components/NumCell.jsx";
@@ -12,22 +12,19 @@ function roll2d10() {
 }
 
 export function HeaderSection({ model, children }) {
-  const { s, a, mods, hp, editable, isCreate, setField, moneyG, fp } = model;
+  const { s, a, mods, hp, editable, isCreate, setField } = model;
 
-  // current（stateに保存しているHP/MP補正値）
-  const NormalRV = safeNum(s?.resources?.hpNormalRV, 0);
-  const WoundRV  = safeNum(s?.resources?.hpWoundRV,  0);
-  const MpRV     = safeNum(s?.resources?.mpRV,       0);
+  // current（stateに保存しているHP補正値）
+  const NormalRV = safeNum(s?.resources?.hpNormalRv, 0);
+  const WoundRV = safeNum(s?.resources?.hpWoundRv, 0);
 
-  // base（能力値からの基礎：いままで表示してた値）
+  // base（能力値からの基礎）
   const baseNormal = safeNum(hp?.hpNormal, 0);
-  const baseWound  = safeNum(hp?.hpWound, 0);
-  const baseMp     = safeNum(hp?.mp, 0);
+  const baseWound = safeNum(hp?.hpWound, 0);
 
   // shown（表示する最終値）
   const shownNormal = baseNormal + NormalRV;
-  const shownWound  = baseWound + WoundRV;
-  const shownMp     = baseMp + MpRV;
+  const shownWound = baseWound + WoundRV;
 
   const abilityKeys = useMemo(
     () => [
@@ -79,6 +76,7 @@ export function HeaderSection({ model, children }) {
   function swapAbilities() {
     if (swapA === swapB) return;
 
+    // ロール結果（lastRoll）を交換する（未ロールなら何もしない：英雄と同じ挙動）
     if (lastRoll?.values) {
       setLastRoll((prev) => {
         if (!prev?.values) return prev;
@@ -95,20 +93,13 @@ export function HeaderSection({ model, children }) {
     }
   }
 
-  function setInitialMoneyFromIntDex() {
-    const i = safeNum(a?.int, 0);
-    const dx = safeNum(a?.dex, 0);
-    const g = Math.max(0, i * dx * 1000);
-    setField(["equipment", "moneyG"], g);
-  }
-
   return (
     <div className="grid-top" style={{ gridTemplateColumns: "1fr" }}>
       <section className="panel header">
         <div className="header-row">
           <div className="brand">
             <div className="brand-sub">RuLiLuRa / Newestalt</div>
-            <div className="brand-title">英雄シート</div>
+            <div className="brand-title">歌姫シート</div>
           </div>
           <div className="header-actions">{children}</div>
         </div>
@@ -119,22 +110,22 @@ export function HeaderSection({ model, children }) {
             <TextCell editable={editable} value={s.basic?.playerName} onCommit={(v) => setField(["basic", "playerName"], v)} />
           </div>
 
-          <div className="label">英雄名</div>
+          <div className="label">歌姫名</div>
           <div className="value big">
             <TextCell editable={editable} value={s.basic?.name} className="big" onCommit={(v) => setField(["basic", "name"], v)} />
           </div>
 
-          <div className="label">英雄レベル</div>
+          <div className="label">歌姫レベル</div>
           <div className="value">
-            <NumCell editable={editable} value={s.basic?.heroLevel} min={1} max={99} onCommit={(v) => setField(["basic", "heroLevel"], v)} />
+            <NumCell editable={editable} value={s.basic?.divaLevel} min={1} max={99} onCommit={(v) => setField(["basic", "divaLevel"], v)} />
           </div>
 
-          <div className="label">ペア経験点</div>
+          <div className="label">階位</div>
           <div className="value">
-            <NumCell editable={editable} value={s.basic?.pairExp} min={0} max={999999} onCommit={(v) => setField(["basic", "pairExp"], v)} />
+            <NumCell editable={editable} value={s.basic?.rank} min={1} max={99} onCommit={(v) => setField(["basic", "rank"], v)} />
           </div>
 
-          <div className="label">現世での国籍</div>
+          <div className="label">出身国</div>
           <div className="value">
             <TextCell editable={editable} value={s.basic?.nationality} onCommit={(v) => setField(["basic", "nationality"], v)} />
           </div>
@@ -142,11 +133,6 @@ export function HeaderSection({ model, children }) {
           <div className="label">性別</div>
           <div className="value">
             <TextCell editable={editable} value={s.basic?.gender} onCommit={(v) => setField(["basic", "gender"], v)} />
-          </div>
-
-          <div className="label">現世での職業</div>
-          <div className="value">
-            <TextCell editable={editable} value={s.basic?.job} onCommit={(v) => setField(["basic", "job"], v)} />
           </div>
 
           <div className="label">年齢</div>
@@ -210,7 +196,7 @@ export function HeaderSection({ model, children }) {
             </tbody>
           </table>
 
-          {/* HP/MP/所持金 */}
+          {/* HP（所持金/FP/MPなし） */}
           <div className="hp-boxes">
             {/* 通常HP */}
             <div className="circle">
@@ -229,7 +215,7 @@ export function HeaderSection({ model, children }) {
                       min={-999999999}
                       max={999999999}
                       className="num"
-                      onCommit={(v) => setField(["resources", "hpNormalRV"], v)}
+                      onCommit={(v) => setField(["resources", "hpNormalRv"], v)}
                     />
                   </div>
                 )}
@@ -258,7 +244,7 @@ export function HeaderSection({ model, children }) {
                       min={-999999999}
                       max={999999999}
                       className="num"
-                      onCommit={(v) => setField(["resources", "hpWoundRV"], v)}
+                      onCommit={(v) => setField(["resources", "hpWoundRv"], v)}
                     />
                   </div>
                 )}
@@ -269,79 +255,10 @@ export function HeaderSection({ model, children }) {
                 <span style={{ opacity: 0.7 }}>{model.fmtSigned(WoundRV)}</span>
               </div>
             </div>
-
-            {/* MP */}
-            <div className="circle">
-              <div className="circle-label">MP</div>
-
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8 }}>
-                <div className="circle-val" style={{ lineHeight: 1 }}>
-                  {shownMp}
-                </div>
-
-                {editable && (
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                    <NumCell
-                      editable={editable}
-                      value={MpRV}
-                      min={-999999999}
-                      max={999999999}
-                      className="num"
-                      onCommit={(v) => setField(["resources", "mpRV"], v)}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2, textAlign: "right" }}>
-                <span style={{ opacity: 0.7 }}>{baseMp}</span>{" "}
-                <span style={{ opacity: 0.7 }}>{model.fmtSigned(MpRV)}</span>
-              </div>
-            </div>
-
-
-            {/* 所持金 / FP */}
-            <div style={{ marginTop: 10, display: "grid", gap: 6, fontSize: 12 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "70px 1fr", alignItems: "center", gap: 8 }}>
-                <div style={{ opacity: 0.75 }}>所持金</div>
-                <div style={{ textAlign: "right" }}>
-                  {editable ? (
-                    <NumCell
-                      editable={editable}
-                      value={moneyG}
-                      min={0}
-                      max={999999999}
-                      className="num"
-                      onCommit={(v) => setField(["equipment", "moneyG"], v)}
-                    />
-                  ) : (
-                    <span className="num">{safeNum(moneyG).toLocaleString()} G</span>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "70px 1fr", alignItems: "center", gap: 8 }}>
-                <div style={{ opacity: 0.75 }}>FP</div>
-                <div style={{ textAlign: "right" }}>
-                  {editable ? (
-                    <NumCell
-                      editable={editable}
-                      value={fp}
-                      min={0}
-                      max={9999}
-                      className="num"
-                      onCommit={(v) => setField(["equipment", "fp"], v)}
-                    />
-                  ) : (
-                    <span className="num">{safeNum(fp)}</span>
-                  )}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* create時：能力値作成 */}
+        {/* create時：能力値作成（初期所持金計算なし） */}
         {isCreate && editable && (
           <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(0,0,0,0.08)" }}>
             <div style={{ fontWeight: 700, marginBottom: 6 }}>能力値作成</div>
@@ -414,13 +331,6 @@ export function HeaderSection({ model, children }) {
               <button type="button" className="sheet-btn" onClick={swapAbilities}>
                 交換する
               </button>
-            </div>
-
-            <div style={{ marginTop: 10 }}>
-              <button type="button" className="sheet-btn" onClick={setInitialMoneyFromIntDex}>
-                初期所持金を設定（知力×器用さ×1000G）
-              </button>
-              <span style={{ fontSize: 12, opacity: 0.75, marginLeft: 8 }}>現在: {safeNum(moneyG).toLocaleString()} G</span>
             </div>
           </div>
         )}

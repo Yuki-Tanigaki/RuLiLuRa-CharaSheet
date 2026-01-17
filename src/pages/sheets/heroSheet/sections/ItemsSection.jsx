@@ -1,37 +1,37 @@
 // src/pages/sheets/heroSheet/sections/ItemsSection.jsx
 import React, { useMemo, useState } from "react";
-import { kindLabel, catalogKeyOf } from "../heroSheetUtils.js";
+import { catalogKeyOf } from "../../common/catalog.js";
+import { kindLabel } from "../kindLabel.js";
 
-const ADVENTURER_SET_ITEM_ID = 38;
+const ADVENTURER_SET_TOOL_ID = 38;
 const ADVENTURER_SET_PRICE_G = 12000;
-
 
 export function ItemsSection({ model }) {
   const { isCreate, itemsEditable, catalog, inventory, addToInventory, removeFromInventory, setField, moneyG, fp } = model;
 
-  const [itemPicker, setItemPicker] = useState({ kind: "item", id: "" });
+  const [itemPicker, setItemPicker] = useState({ kind: "tool", id: "" });
 
   function isAdventurerSet(item) {
-    return item?.kind === "item" && Number(item?.id) === ADVENTURER_SET_ITEM_ID;
+    return item?.kind === "tool" && Number(item?.id) === ADVENTURER_SET_TOOL_ID;
   }
 
   function grantAdventurerSetContents() {
     // 携帯用食料（１日２食分）×2
-    addToInventory("item", 1, 2);
+    addToInventory("tool", 1, 2);
     // ほくち箱（点火用）
-    addToInventory("item", 8, 1);
+    addToInventory("tool", 8, 1);
     // 毛布×2
-    addToInventory("item", 14, 2);
+    addToInventory("tool", 14, 2);
     // 水（1日分）
-    addToInventory("item", 3, 1);
+    addToInventory("tool", 3, 1);
     // 水袋
-    addToInventory("item", 7, 1);
+    addToInventory("tool", 7, 1);
     // たいまつ×５（※マスター上「たいまつ×５」1個が5本扱い）
-    addToInventory("item", 9, 1);
+    addToInventory("tool", 9, 1);
     // リュックサック
-    addToInventory("item", 6, 1);
+    addToInventory("tool", 6, 1);
     // ロープ（10ｍ）
-    addToInventory("item", 12, 1);
+    addToInventory("tool", 12, 1);
   }
 
   function buyAdventurerSet() {
@@ -62,11 +62,13 @@ export function ItemsSection({ model }) {
 
   function buyWithMoney(item) {
     if (!item) return;
+
     // 冒険者セットは「中身を一括追加」
     if (isAdventurerSet(item)) {
       buyAdventurerSet();
       return;
     }
+
     const price = Number(item.price);
     if (!Number.isFinite(price)) return;
     if (moneyG < price) return;
@@ -77,11 +79,13 @@ export function ItemsSection({ model }) {
 
   function buyWithFp(item) {
     if (!item) return;
+
     // 「所持品に追加」でもセットは中身を追加（お金は減らさない）
     if (isAdventurerSet(item)) {
       grantAdventurerSetContents();
       return;
     }
+
     const cost = Number(item.fp);
     if (!Number.isFinite(cost)) return;
     if (fp < cost) return;
@@ -107,14 +111,22 @@ export function ItemsSection({ model }) {
       {itemsEditable && (
         <div style={{ display: "grid", gap: 8, marginBottom: 10 }}>
           <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 8, alignItems: "center" }}>
-            <select className="sheet-input" value={itemPicker.kind} onChange={(e) => setItemPicker((p) => ({ ...p, kind: e.target.value, id: "" }))}>
+            <select
+              className="sheet-input"
+              value={itemPicker.kind}
+              onChange={(e) => setItemPicker((p) => ({ ...p, kind: e.target.value, id: "" }))}
+            >
               <option value="weapon">武器</option>
               <option value="armor">防具</option>
               <option value="shield">盾</option>
-              <option value="item">アイテム</option>
+              <option value="tool">道具</option>
             </select>
 
-            <select className="sheet-input" value={itemPicker.id} onChange={(e) => setItemPicker((p) => ({ ...p, id: e.target.value }))}>
+            <select
+              className="sheet-input"
+              value={itemPicker.id}
+              onChange={(e) => setItemPicker((p) => ({ ...p, id: e.target.value }))}
+            >
               <option value="">（選択）</option>
               {(catalogByKind.get(itemPicker.kind) ?? []).map((c) => (
                 <option key={catalogKeyOf(c.kind, c.id)} value={String(c.id)}>
@@ -148,7 +160,12 @@ export function ItemsSection({ model }) {
               type="button"
               className="sheet-btn"
               onClick={() => buyWithFp(selectedCatalogItem)}
-              disabled={!selectedCatalogItem || selectedCatalogItem.fp == null || !Number.isFinite(Number(selectedCatalogItem.fp)) || fp < Number(selectedCatalogItem.fp)}
+              disabled={
+                !selectedCatalogItem ||
+                selectedCatalogItem.fp == null ||
+                !Number.isFinite(Number(selectedCatalogItem.fp)) ||
+                fp < Number(selectedCatalogItem.fp)
+              }
               title={selectedCatalogItem?.fp == null ? "購入不可（fp が無い/ null）" : ""}
             >
               購入（{selectedCatalogItem?.fp ?? "—"} FP）
@@ -166,7 +183,10 @@ export function ItemsSection({ model }) {
             const name = def?.name ?? "(unknown)";
             const suffix = e.qty >= 2 ? `（×${e.qty}）` : "";
             return (
-              <div key={catalogKeyOf(e.kind, e.id)} style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "space-between" }}>
+              <div
+                key={catalogKeyOf(e.kind, e.id)}
+                style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "space-between" }}
+              >
                 <div style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   <span style={{ opacity: 0.7, marginRight: 6 }}>[{kindLabel(e.kind)}]</span>
                   {name}

@@ -1,6 +1,6 @@
 // src/pages/sheets/heroSheet/sections/HeroSkillsSection.jsx
 import React, { useMemo } from "react";
-import { TextCell } from "../../components/TextCell.jsx";
+import { NumCell } from "../../components/NumCell.jsx";
 
 function heroSkillKeyOfRow(row) {
   if (!row) return "";
@@ -37,8 +37,7 @@ export function HeroSkillsSection({ model }) {
   function addMasterRow() {
     setField(["heroSkills", "rows"], (prev) => {
       const cur = Array.isArray(prev) ? prev : [];
-      // level は廃止。memo を追加
-      return [...cur, { kind: "master", id: null, memo: "" }];
+      return [...cur, { kind: "master", id: null, level: 1 }];
     });
   }
 
@@ -66,8 +65,8 @@ export function HeroSkillsSection({ model }) {
       <table className="sheet-table">
         <thead>
           <tr>
-            <th style={{ width: 220 }}>英雄スキル</th>
-            <th>メモ</th>
+            <th>英雄スキル</th>
+            <th style={{ width: 90 }}>Lv</th>
             {editable && <th style={{ width: 70 }}>操作</th>}
           </tr>
         </thead>
@@ -81,7 +80,7 @@ export function HeroSkillsSection({ model }) {
             </tr>
           ) : (
             rows.map((row, i) => {
-              // 過去データで level/custom が残っていても UI は master として扱う
+              // 過去データで custom が残っていても UI は master として扱う
               const rowAsMaster = { ...(row ?? {}), kind: "master" };
 
               const label = heroRowLabel(rowAsMaster);
@@ -101,7 +100,9 @@ export function HeroSkillsSection({ model }) {
                           const nextId = v === "" ? null : Number(v);
                           const nextKey = nextId == null ? "" : `m:${String(nextId)}`;
 
-                          // 既存 memo は保持（name/level は使わない）
+                          // 重複禁止
+                          if (nextKey && takenKeys.has(nextKey) && nextKey !== selfKey) return;
+
                           updateRow(i, { kind: "master", id: nextId, name: undefined });
                         }}
                       >
@@ -121,16 +122,17 @@ export function HeroSkillsSection({ model }) {
                     )}
                   </td>
 
-                  <td>
+                  <td className="num">
                     {!editable ? (
-                      <span style={{ whiteSpace: "pre-wrap" }}>{String(rowAsMaster?.memo ?? "") || "—"}</span>
+                      Number(rowAsMaster?.level ?? 1) || 1
                     ) : (
-                      <TextCell
+                      <NumCell
                         editable={editable}
-                        value={rowAsMaster?.memo ?? ""}
-                        placeholder="メモ"
-                        multiline
-                        onCommit={(v) => updateRow(i, { memo: v })}
+                        value={rowAsMaster?.level ?? 1}
+                        min={0}
+                        max={99}
+                        className="num"
+                        onCommit={(v) => updateRow(i, { level: v })}
                       />
                     )}
                   </td>

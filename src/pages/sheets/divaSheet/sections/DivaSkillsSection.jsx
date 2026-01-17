@@ -1,58 +1,57 @@
-// src/pages/sheets/heroSheet/sections/HeroSkillsSection.jsx
+// src/pages/sheets/divaSheet/sections/DivaSkillsSection.jsx
 import React, { useMemo } from "react";
-import { TextCell } from "../../components/TextCell.jsx";
+import { NumCell } from "../../components/NumCell.jsx";
 
-function heroSkillKeyOfRow(row) {
+function divaSkillKeyOfRow(row) {
   if (!row) return "";
   // 以後は master のみ扱う（過去データの custom も master 扱いに寄せる）
   const id = row.id ?? null;
   return id == null ? "" : `m:${String(id)}`;
 }
 
-export function HeroSkillsSection({ model }) {
-  const { editable, isCreate, setField, masterHeroSkills, heroSkillRows, heroRowLabel } = model;
+export function DivaSkillsSection({ model }) {
+  const { editable, isCreate, setField, masterDivaSkills, divaSkillRows, divaRowLabel } = model;
 
   // createでは何もしない（表示もしない）
   if (isCreate) return null;
 
-  const master = Array.isArray(masterHeroSkills) ? masterHeroSkills : [];
-  const rows = Array.isArray(heroSkillRows) ? heroSkillRows : [];
+  const master = Array.isArray(masterDivaSkills) ? masterDivaSkills : [];
+  const rows = Array.isArray(divaSkillRows) ? divaSkillRows : [];
 
   const takenKeys = useMemo(() => {
     const set = new Set();
     for (const r of rows) {
-      const k = heroSkillKeyOfRow(r);
+      const k = divaSkillKeyOfRow(r);
       if (k) set.add(k);
     }
     return set;
   }, [rows]);
 
   function updateRow(index, patch) {
-    setField(["heroSkills", "rows"], (prev) => {
+    setField(["divaSkills", "rows"], (prev) => {
       const cur = Array.isArray(prev) ? prev : [];
       return cur.map((r, i) => (i === index ? { ...(r ?? {}), ...patch } : r));
     });
   }
 
   function addMasterRow() {
-    setField(["heroSkills", "rows"], (prev) => {
+    setField(["divaSkills", "rows"], (prev) => {
       const cur = Array.isArray(prev) ? prev : [];
-      // level は廃止。memo を追加
-      return [...cur, { kind: "master", id: null, memo: "" }];
+      return [...cur, { kind: "master", id: null, level: 1 }];
     });
   }
 
   function removeRow(index) {
-    setField(["heroSkills", "rows"], (prev) => {
+    setField(["divaSkills", "rows"], (prev) => {
       const cur = Array.isArray(prev) ? prev : [];
       return cur.filter((_, i) => i !== index);
     });
   }
 
   return (
-    <section className="panel hero-skills">
+    <section className="panel diva-skills">
       <div className="panel-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span>英雄スキル欄</span>
+        <span>歌姫スキル欄</span>
 
         {editable && (
           <div style={{ display: "flex", gap: 8 }}>
@@ -66,8 +65,8 @@ export function HeroSkillsSection({ model }) {
       <table className="sheet-table">
         <thead>
           <tr>
-            <th style={{ width: 220 }}>英雄スキル</th>
-            <th>メモ</th>
+            <th>歌姫スキル</th>
+            <th style={{ width: 90 }}>Lv</th>
             {editable && <th style={{ width: 70 }}>操作</th>}
           </tr>
         </thead>
@@ -81,11 +80,11 @@ export function HeroSkillsSection({ model }) {
             </tr>
           ) : (
             rows.map((row, i) => {
-              // 過去データで level/custom が残っていても UI は master として扱う
+              // 過去データで custom が残っていても UI は master として扱う
               const rowAsMaster = { ...(row ?? {}), kind: "master" };
 
-              const label = heroRowLabel(rowAsMaster);
-              const selfKey = heroSkillKeyOfRow(rowAsMaster);
+              const label = divaRowLabel(rowAsMaster);
+              const selfKey = divaSkillKeyOfRow(rowAsMaster);
 
               return (
                 <tr key={i}>
@@ -101,7 +100,9 @@ export function HeroSkillsSection({ model }) {
                           const nextId = v === "" ? null : Number(v);
                           const nextKey = nextId == null ? "" : `m:${String(nextId)}`;
 
-                          // 既存 memo は保持（name/level は使わない）
+                          // 重複禁止
+                          if (nextKey && takenKeys.has(nextKey) && nextKey !== selfKey) return;
+
                           updateRow(i, { kind: "master", id: nextId, name: undefined });
                         }}
                       >
@@ -121,16 +122,17 @@ export function HeroSkillsSection({ model }) {
                     )}
                   </td>
 
-                  <td>
+                  <td className="num">
                     {!editable ? (
-                      <span style={{ whiteSpace: "pre-wrap" }}>{String(rowAsMaster?.memo ?? "") || "—"}</span>
+                      Number(rowAsMaster?.level ?? 1) || 1
                     ) : (
-                      <TextCell
+                      <NumCell
                         editable={editable}
-                        value={rowAsMaster?.memo ?? ""}
-                        placeholder="メモ"
-                        multiline
-                        onCommit={(v) => updateRow(i, { memo: v })}
+                        value={rowAsMaster?.level ?? 1}
+                        min={0}
+                        max={99}
+                        className="num"
+                        onCommit={(v) => updateRow(i, { level: v })}
                       />
                     )}
                   </td>

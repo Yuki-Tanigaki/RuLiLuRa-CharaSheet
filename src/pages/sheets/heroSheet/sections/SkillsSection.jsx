@@ -1,8 +1,9 @@
 // src/pages/sheets/heroSheet/sections/SkillsSection.jsx
 import React, { useEffect, useMemo, useRef } from "react";
-import { TextCell } from "../../components/TextCell.jsx";
 import { NumCell } from "../../components/NumCell.jsx";
-import { catalogKeyOf, kindLabel, safeNum } from "../heroSheetUtils.js";
+import { safeNum } from "../../common/utils/number.js";
+import { catalogKeyOf } from "../../common/catalog.js";
+import { kindLabel } from "../kindLabel.js";
 
 const CREATE_SKILL_COUNT = 8;
 const CREATE_BASE_LEVELS = [5, 10, 15, 20];
@@ -34,9 +35,8 @@ function skillKeyOfRow(row) {
     const id = row.id ?? null;
     return id == null ? "" : `m:${String(id)}`;
   }
-  // custom
-  const name = String(row.name ?? "").trim().toLowerCase();
-  return name ? `c:${name}` : "";
+  // custom は今後扱わない（過去データが残っていても重複判定から除外）
+  return "";
 }
 
 export function SkillsSection({ model }) {
@@ -119,7 +119,6 @@ export function SkillsSection({ model }) {
           return (
             a.kind === b.kind &&
             (a.id ?? null) === (b.id ?? null) &&
-            String(a.name ?? "") === String(b.name ?? "") &&
             Number(a.level ?? 0) === Number(b.level ?? 0) &&
             Number(a.baseLevel ?? 0) === Number(b.baseLevel ?? 0)
           );
@@ -147,7 +146,6 @@ export function SkillsSection({ model }) {
   // -----------------------------
   // 「すでに選ばれているスキル」を集計（重複禁止用）
   // - master: id 重複禁止
-  // - custom: name(trim/lower) 重複 “警告”
   // -----------------------------
   const takenSkillKeys = useMemo(() => {
     const set = new Set();
@@ -156,19 +154,6 @@ export function SkillsSection({ model }) {
       if (key) set.add(key);
     }
     return set;
-  }, [displayRows]);
-
-  const duplicateCustomNames = useMemo(() => {
-    const counts = new Map();
-    for (const r of displayRows) {
-      if (r?.kind !== "custom") continue;
-      const key = skillKeyOfRow(r);
-      if (!key) continue;
-      counts.set(key, (counts.get(key) ?? 0) + 1);
-    }
-    const dups = new Set();
-    for (const [k, c] of counts.entries()) if (c >= 2) dups.add(k);
-    return dups;
   }, [displayRows]);
 
   // -----------------------------
@@ -196,14 +181,6 @@ export function SkillsSection({ model }) {
     setField(["skills", "rows"], (rowsPrev) => {
       const rows = Array.isArray(rowsPrev) ? rowsPrev : [];
       return [...rows, { kind: "master", id: null, level: 10 }];
-    });
-  }
-
-  function addCustomSkillRow() {
-    if (isCreate) return;
-    setField(["skills", "rows"], (rowsPrev) => {
-      const rows = Array.isArray(rowsPrev) ? rowsPrev : [];
-      return [...rows, { kind: "custom", name: "", level: 10 }];
     });
   }
 
@@ -302,11 +279,11 @@ export function SkillsSection({ model }) {
       const p = prevSkills ?? {};
       const rowsPrev = Array.isArray(p.rows) ? p.rows : [];
 
-      const draftInt = Array.isArray(p.bonusDraft?.int) ? p.bonusDraft.int : [];
-      const draftDex = Array.isArray(p.bonusDraft?.dex) ? p.bonusDraft.dex : [];
+      const draftInt0 = Array.isArray(p.bonusDraft?.int) ? p.bonusDraft.int : [];
+      const draftDex0 = Array.isArray(p.bonusDraft?.dex) ? p.bonusDraft.dex : [];
 
-      const intSet = new Set(draftInt.map(Number));
-      const dexSet = new Set(draftDex.map(Number));
+      const intSet = new Set(draftInt0.map(Number));
+      const dexSet = new Set(draftDex0.map(Number));
 
       const addInt = safeNum(intBonusValue, 0);
       const addDex = safeNum(dexBonusValue, 0);
@@ -424,7 +401,7 @@ export function SkillsSection({ model }) {
     const t1 = draftTargets?.[1] ?? "";
 
     function setAt(pos, v) {
-      if (locked) return; // 確定後は変更させない
+      if (locked) return;
       const next = [t0, t1];
       next[pos] = v === "" ? "" : Number(v);
 
@@ -446,13 +423,13 @@ export function SkillsSection({ model }) {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <select 
-            className="sheet-input" 
-            value={t0 === "" ? "" : String(t0)} 
+          <select
+            className="sheet-input"
+            value={t0 === "" ? "" : String(t0)}
             onChange={(e) => setAt(0, e.target.value)}
             disabled={locked}
             title={locked ? "確定済みです（変更をクリックすると選び直せます）" : ""}
-            >
+          >
             <option value="">（未選択）</option>
             {selectableSkillRows.map((r) => (
               <option key={`b0-${r.index}`} value={String(r.index)}>
@@ -461,9 +438,9 @@ export function SkillsSection({ model }) {
             ))}
           </select>
 
-          <select 
-            className="sheet-input" 
-            value={t1 === "" ? "" : String(t1)} 
+          <select
+            className="sheet-input"
+            value={t1 === "" ? "" : String(t1)}
             onChange={(e) => setAt(1, e.target.value)}
             disabled={locked}
             title={locked ? "確定済みです（変更をクリックすると選び直せます）" : ""}
@@ -478,7 +455,7 @@ export function SkillsSection({ model }) {
         </div>
 
         <div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.6 }}>
-          ※ 先にスキル欄でスキル名を選択/入力してください。<br />
+          ※ 先にスキル欄でスキル名を選択してください。<br />
           ※ 同じスキルは2回選べません。
         </div>
       </div>
@@ -551,7 +528,6 @@ export function SkillsSection({ model }) {
   const canConfirm =
     isCreate &&
     baseSumOk &&
-    !duplicateCustomNames.size &&
     ((canUseIntBonus && draftInt.length > 0) || (canUseDexBonus && draftDex.length > 0));
 
   return (
@@ -562,10 +538,7 @@ export function SkillsSection({ model }) {
         {editable && !isCreate && (
           <div style={{ display: "flex", gap: 8 }}>
             <button type="button" className="sheet-btn" onClick={addMasterSkillRow}>
-              ＋ マスターから追加
-            </button>
-            <button type="button" className="sheet-btn" onClick={addCustomSkillRow}>
-              ＋ 自由入力で追加
+              ＋ 追加
             </button>
           </div>
         )}
@@ -582,12 +555,6 @@ export function SkillsSection({ model }) {
             </b>
             {!baseSumOk && <span style={{ marginLeft: 6, color: "crimson" }}>（80を超えています）</span>}
           </span>
-        </div>
-      )}
-
-      {duplicateCustomNames.size > 0 && (
-        <div style={{ marginBottom: 8, fontSize: 12, color: "crimson", lineHeight: 1.5 }}>
-          ※ 自由入力スキル名が重複しています（同名は選べません）。名称を変更してください。
         </div>
       )}
 
@@ -613,7 +580,6 @@ export function SkillsSection({ model }) {
               const label = rowLabel(row);
               const lv = safeNum(row?.level, 0);
 
-              // 現在行のキー（これ自身は “重複扱い” にしない）
               const selfKey = skillKeyOfRow(row);
 
               return (
@@ -628,7 +594,6 @@ export function SkillsSection({ model }) {
                         onChange={(e) => {
                           const v = e.target.value;
 
-                          // 重複禁止：他行で使ってるidは選べない（UIでもdisabledだが保険）
                           const nextId = v === "" ? null : Number(v);
                           const nextKey = nextId == null ? "" : `m:${String(nextId)}`;
                           if (nextKey && takenSkillKeys.has(nextKey) && nextKey !== selfKey) return;
@@ -651,15 +616,8 @@ export function SkillsSection({ model }) {
                         })}
                       </select>
                     ) : (
-                      <TextCell
-                        editable={editable}
-                        value={row?.name ?? ""}
-                        placeholder="自由入力スキル名"
-                        onCommit={(v) => {
-                          if (isCreate) cancelConfirmedIfRowAffected(i);
-                          setField(["skills", "rows", i, "name"], v);
-                        }}
-                      />
+                      // custom は編集しない（過去データ閲覧のみ）
+                      <span style={{ opacity: 0.85 }}>{label}</span>
                     )}
                   </td>
 
@@ -677,7 +635,6 @@ export function SkillsSection({ model }) {
                         }}
                       >
                         {CREATE_BASE_LEVELS.map((x) => {
-                          // 80制限：この選択肢にしたときに超えるなら disabled
                           const others = baseSum - safeNum(row?.baseLevel, 0);
                           const nextSum = others + x;
                           const disabled = nextSum > CREATE_BASE_SUM_LIMIT;
@@ -748,8 +705,6 @@ export function SkillsSection({ model }) {
                   ? "既に確定済みです（変更したい場合は「変更」）"
                   : !baseSumOk
                   ? "基本Lv合計（ボーナス除外）が80以下になるように調整してください"
-                  : duplicateCustomNames.size
-                  ? "自由入力スキル名の重複を解消してください"
                   : !((canUseIntBonus && draftInt.length > 0) || (canUseDexBonus && draftDex.length > 0))
                   ? "対象を選択してください"
                   : ""

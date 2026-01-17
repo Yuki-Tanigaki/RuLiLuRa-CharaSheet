@@ -1,6 +1,6 @@
 // src/pages/sheets/heroSheet/HeroSheet.jsx
-import React, { useEffect, useState } from "react";
-import "../../../styles/sheet.css";
+import React from "react";
+import "../../../styles/hero_sheet.css";
 
 import { defaultHeroState } from "./defaultHeroState.js";
 import { useHeroSheetModel } from "./useHeroSheetModel.js";
@@ -12,8 +12,6 @@ import { ItemsSection } from "./sections/ItemsSection.jsx";
 import { SideEquipmentSection } from "./sections/SideEquipmentSection.jsx";
 import { MemoSection } from "./sections/MemoSection.jsx";
 import { HistorySection } from "./sections/HistorySection.jsx";
-import { UserCatalogModal } from "../UserCatalogModal.jsx";
-
 
 export default function HeroSheet(props) {
   const {
@@ -26,17 +24,11 @@ export default function HeroSheet(props) {
     onView,
     onSaveHistory,
     onShare,
-    userCatalogOpenTick = 0,
   } = props;
 
   const s = state ?? defaultHeroState();
   const m = useHeroSheetModel({ state: s, mode, setState });
   const editable = !!m.editable;
-
-  const [userCatalogOpen, setUserCatalogOpen] = useState(false);
-  useEffect(() => {
-    if (userCatalogOpenTick > 0) setUserCatalogOpen(true);
-  }, [userCatalogOpenTick]);
 
   const isCreateMode = mode === "create";
 
@@ -59,7 +51,6 @@ export default function HeroSheet(props) {
 
   return (
     <div className="page sheet hero-sheet">
-      <UserCatalogModal model={m} open={userCatalogOpen} onClose={() => setUserCatalogOpen(false)} />
       {/* Toolbar */}
       <div
         className="toolbar"
@@ -122,8 +113,8 @@ export default function HeroSheet(props) {
         <div className="sheet-scroll side-scroll">
           <SideEquipmentSection model={m} />
           <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
-              <MemoSection model={m} />
-              <HistorySection sheetType="hero" onRestoreState={setState} />
+            <MemoSection model={m} />
+            <HistorySection sheetType="hero" onRestoreState={setState} />
           </div>
         </div>
       </div>

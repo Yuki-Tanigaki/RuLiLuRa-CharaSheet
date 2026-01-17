@@ -1,6 +1,8 @@
 // src/pages/sheets/heroSheet/sections/SideEquipmentSection.jsx
 import React, { useMemo } from "react";
-import { normalizeRequirement, safeNum, fmtSigned } from "../heroSheetUtils.js";
+import { normalizeRequirement } from "../../common/normalize.js";
+import { safeNum } from "../../common/utils/number.js";
+import { fmtSigned } from "../../common/utils/format.js";
 
 function renderRequirementText(req) {
   const r = normalizeRequirement(req);
@@ -34,10 +36,11 @@ export function SideEquipmentSection({ model }) {
   const ownedArmorIds = ownedIdsOf("armor");
   const ownedShieldIds = ownedIdsOf("shield");
 
-  function isTwoHandWeapon(weaponId) {
-    const w = defByKindId("weapon", weaponId);
-    return w?.grip === "両手";
-  }
+  // =========================
+  // ★変更点：両手/盾/左手の「強制解除」を全撤廃
+  // ・装備はセットするだけ
+  // ・通常ルールと矛盾しそうな組み合わせは警告表示のみ
+  // =========================
 
   function equipArmor(armorId) {
     setField(["equipment", "equipped", "armorId"], armorId == null ? null : Number(armorId));
@@ -45,17 +48,7 @@ export function SideEquipmentSection({ model }) {
 
   function equipShield(shieldId) {
     const sid = shieldId == null ? null : Number(shieldId);
-
-    setField(["equipment", "equipped"], (eqPrev) => {
-      const eq2 = eqPrev ?? {};
-      const next = { ...eq2, shieldId: sid };
-      if (sid != null) {
-        next.weaponTwoHanded = false;
-        next.weaponLeftId = null;
-        if (eq2.weaponTwoHanded) next.weaponRightId = null;
-      }
-      return next;
-    });
+    setField(["equipment", "equipped", "shieldId"], sid);
   }
 
   function equipWeapon(hand, weaponId) {
@@ -67,45 +60,54 @@ export function SideEquipmentSection({ model }) {
         const next = { ...eq2 };
         if (hand === "right") next.weaponRightId = null;
         else next.weaponLeftId = null;
-
-        if (eq2.weaponTwoHanded) {
-          next.weaponRightId = null;
-          next.weaponLeftId = null;
-          next.weaponTwoHanded = false;
-        }
         return next;
       });
       return;
     }
 
-    const twoHand = isTwoHandWeapon(wid);
-
     setField(["equipment", "equipped"], (eqPrev) => {
       const eq2 = eqPrev ?? {};
       const next = { ...eq2 };
-
-      if (twoHand) {
-        next.weaponRightId = wid;
-        next.weaponLeftId = wid;
-        next.weaponTwoHanded = true;
-        next.shieldId = null;
-        return next;
-      }
-
-      if (eq2.weaponTwoHanded) {
-        next.weaponTwoHanded = false;
-        next.weaponRightId = null;
-        next.weaponLeftId = null;
-      }
-
-      if (hand === "left") next.shieldId = null;
-
       if (hand === "right") next.weaponRightId = wid;
       else next.weaponLeftId = wid;
-
       return next;
     });
   }
+
+  // =========================
+  // 警告（禁止ではなく表示だけ）
+  // =========================
+  const equipWarnings = useMemo(() => {
+    const warns = [];
+
+    const rightId = eq?.weaponRightId ?? null;
+    const leftId = eq?.weaponLeftId ?? null;
+    const shieldId = eq?.shieldId ?? null;
+
+    const wRight = defByKindId("weapon", rightId);
+    const wLeft = defByKindId("weapon", leftId);
+
+    const rightTwo = (wRight?.grip ?? "") === "両手";
+    const leftTwo = (wLeft?.grip ?? "") === "両手";
+
+    // 旧データ互換：weaponTwoHanded は「無視」される（ただし警告）
+    if (eq?.weaponTwoHanded) {
+      warns.push("weaponTwoHanded=true（旧仕様フラグ）は現在の装備判定では無視されます。");
+    }
+
+    // “通常ルールでは”不自然な組み合わせを警告
+    if (rightTwo && (leftId != null || shieldId != null)) {
+      warns.push("右手の武器が「両手」ですが、左手武器/盾も装備されています（通常ルールでは両手武器中は左手が空きません）。");
+    }
+    if (leftTwo && shieldId != null) {
+      warns.push("左手の武器が「両手」ですが、盾も装備されています（通常ルールでは両手武器中は盾が装備できません）。");
+    }
+    if (leftId != null && shieldId != null) {
+      warns.push("左手に武器と盾が同時に装備されています（通常ルールでは左手は1枠です）。");
+    }
+
+    return warns;
+  }, [eq, defByKindId]);
 
   const defenseValue = safeNum(ar?.defenseValue, 0) + safeNum(sh?.defenseValue, 0);
   const resistMod = safeNum(model.mods?.psy) + safeNum(model.mods?.vit);
@@ -117,11 +119,34 @@ export function SideEquipmentSection({ model }) {
     <aside className="side" style={{ alignSelf: "start" }}>
       <div className="panel-title">個人装備</div>
 
+      {equipWarnings.length > 0 && (
+        <div
+          style={{
+            margin: "8px 0 10px",
+            padding: 8,
+            border: "1px solid rgba(220,0,0,0.35)",
+            borderRadius: 10,
+            background: "rgba(220,0,0,0.06)",
+          }}
+        >
+          <div style={{ fontWeight: 800, fontSize: 12, marginBottom: 6, color: "crimson" }}>装備の警告</div>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "crimson", lineHeight: 1.5 }}>
+            {equipWarnings.map((w, i) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {editable && (
         <div style={{ display: "grid", gap: 8, marginBottom: 10 }}>
           <div style={{ display: "grid", gridTemplateColumns: "90px 1fr", gap: 8, alignItems: "center" }}>
             <div style={{ opacity: 0.75 }}>右手武器</div>
-            <select className="sheet-input" value={eq.weaponRightId ?? ""} onChange={(e) => equipWeapon("right", e.target.value === "" ? null : Number(e.target.value))}>
+            <select
+              className="sheet-input"
+              value={eq.weaponRightId ?? ""}
+              onChange={(e) => equipWeapon("right", e.target.value === "" ? null : Number(e.target.value))}
+            >
               <option value="">（なし）</option>
               {ownedWeaponIds.map((id) => {
                 const w = defByKindId("weapon", id);
@@ -138,8 +163,6 @@ export function SideEquipmentSection({ model }) {
               className="sheet-input"
               value={eq.weaponLeftId ?? ""}
               onChange={(e) => equipWeapon("left", e.target.value === "" ? null : Number(e.target.value))}
-              disabled={!!eq.weaponTwoHanded}
-              title={eq.weaponTwoHanded ? "両手武器装備中" : ""}
             >
               <option value="">（なし）</option>
               {ownedWeaponIds.map((id) => {
@@ -153,7 +176,11 @@ export function SideEquipmentSection({ model }) {
             </select>
 
             <div style={{ opacity: 0.75 }}>防具</div>
-            <select className="sheet-input" value={eq.armorId ?? ""} onChange={(e) => equipArmor(e.target.value === "" ? null : Number(e.target.value))}>
+            <select
+              className="sheet-input"
+              value={eq.armorId ?? ""}
+              onChange={(e) => equipArmor(e.target.value === "" ? null : Number(e.target.value))}
+            >
               <option value="">（なし）</option>
               {ownedArmorIds.map((id) => {
                 const a2 = defByKindId("armor", id);
@@ -170,8 +197,6 @@ export function SideEquipmentSection({ model }) {
               className="sheet-input"
               value={eq.shieldId ?? ""}
               onChange={(e) => equipShield(e.target.value === "" ? null : Number(e.target.value))}
-              disabled={!!eq.weaponTwoHanded || !!eq.weaponLeftId}
-              title={eq.weaponTwoHanded || eq.weaponLeftId ? "左手が埋まっています" : ""}
             >
               <option value="">（なし）</option>
               {ownedShieldIds.map((id) => {
@@ -194,7 +219,7 @@ export function SideEquipmentSection({ model }) {
       <table className="sheet-table" style={{ fontSize: 12 }}>
         <thead>
           <tr>
-            <th style={{ width: 52 }}>手</th>
+            <th style={{ width: 52 }}>握り</th>
             <th>名称</th>
             <th style={{ width: 48 }}>射程</th>
             <th style={{ width: 56 }}>回数</th>
@@ -212,9 +237,9 @@ export function SideEquipmentSection({ model }) {
               </td>
             </tr>
           ) : (
-            weaponHitRows.map(({ slot, w, baseHit, combatMod, weaponSkillLevel, req, finalHit }, idx) => (
-              <tr key={`${slot}-${idx}`}>
-                <td>{slot}</td>
+            weaponHitRows.map(({ grip, w, baseHit, combatMod, weaponSkillLevel, req, finalHit }, idx) => (
+              <tr key={`w-${idx}`}>
+                <td>{grip}</td>
                 <td>{w?.name ?? "—"}</td>
                 <td>{w?.range ?? "—"}</td>
                 <td>{w?.attacks ?? "—"}</td>
@@ -232,10 +257,10 @@ export function SideEquipmentSection({ model }) {
       </table>
 
       <div style={{ marginTop: 8, display: "grid", gap: 6, fontSize: 12 }}>
-        {weaponDetails.map(({ slot, w, req }, idx) => (
-          <div key={`wdetail-${slot}-${idx}`} style={{ borderTop: "1px solid rgba(0,0,0,0.08)", paddingTop: 6 }}>
+        {weaponDetails.map(({ grip, w, req }, idx) => (
+          <div key={`wdetail-${idx}`} style={{ borderTop: "1px solid rgba(0,0,0,0.08)", paddingTop: 6 }}>
             <div style={{ opacity: 0.8 }}>
-              <b>{slot}</b>：{w?.name ?? "—"}
+              <b>{grip}</b>：{w?.name ?? "—"}
             </div>
             <div>ダメージ: {w?.damage ?? "—"}</div>
             <div>
@@ -304,7 +329,9 @@ export function SideEquipmentSection({ model }) {
           </div>
 
           {!shieldReq.met && sh && (
-            <div style={{ opacity: 0.85 }}>※ 必要スキル値に達していないため、回避(修正)に -20 ペナルティ（盾の本来ペナルティに追加）</div>
+            <div style={{ opacity: 0.85 }}>
+              ※ 必要スキル値に達していないため、回避(修正)に -20 ペナルティ（盾の本来ペナルティに追加）
+            </div>
           )}
         </div>
       </div>

@@ -16,7 +16,7 @@
  *   特記事項・使用条件・効果説明（任意）
  */
 
-export const ITEMS_MASTER = [
+export const TOOLS_MASTER = [
   // ---- 食料・水 ----
   { id: 1,  name: "携帯用食料（１日２食分）", price: 1000, memo: "" },
   { id: 2,  name: "食事（1日２食分）", price: 400, memo: "" },
@@ -88,20 +88,20 @@ export const ITEMS_MASTER = [
 
 // -------- 取得ユーティリティ --------
 
-/** id -> item */
-export function itemById(id) {
+/** id -> tool */
+export function toolById(id) {
   const n = Number(id);
   if (!Number.isFinite(n)) return null;
-  return ITEMS_MASTER.find(i => i.id === n) ?? null;
+  return TOOLS_MASTER.find(i => i.id === n) ?? null;
 }
 
 /** id -> name（見つからなければ "(unknown)"） */
-export function itemNameById(id) {
-  return itemById(id)?.name ?? "(unknown)";
+export function toolNameById(id) {
+  return toolById(id)?.name ?? "(unknown)";
 }
 
-/** name（完全一致） -> item */
-export function itemByName(name) {
+/** name（完全一致） -> tool */
+export function toolByName(name) {
   if (!name) return null;
-  return ITEMS_MASTER.find(i => i.name === name) ?? null;
+  return TOOLS_MASTER.find(i => i.name === name) ?? null;
 }
