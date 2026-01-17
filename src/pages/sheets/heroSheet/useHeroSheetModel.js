@@ -10,7 +10,6 @@ import { TOOLS_MASTER } from "../../../data/toolsMaster.js";
 
 import { useSetField } from "../common/useSetField.js";
 import { safeNum } from "../common/utils/number.js";
-import { fmtSigned } from "../common/utils/format.js";
 import { normalizeRequirement, normalizeThresholdKey, labelFromMaster } from "../common/normalize.js";
 import { resolveCatalogRef, catalogKeyOf } from "../common/catalog.js";
 import { normalizeInventory as normalizeInv, addQty } from "../common/inventory.js";
@@ -26,7 +25,6 @@ export function useHeroSheetModel({ state, mode, setState }) {
   const s = state;
   const editable = mode === "edit" || mode === "create";
   const isCreate = mode === "create";
-  const itemsEditable = editable && !isCreate;
 
   const setField = useSetField(setState);
 
@@ -389,7 +387,6 @@ export function useHeroSheetModel({ state, mode, setState }) {
     // flags
     editable,
     isCreate,
-    itemsEditable,
 
     // base state references
     s,
@@ -449,8 +446,5 @@ export function useHeroSheetModel({ state, mode, setState }) {
 
     // user catalog（read-only）
     userCatalog,
-
-    // format helper re-export
-    fmtSigned,
   };
 }

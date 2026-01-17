@@ -3,6 +3,7 @@ import React, { useMemo, useState } from "react";
 import { TextCell } from "../../components/TextCell.jsx";
 import { NumCell } from "../../components/NumCell.jsx";
 import { safeNum, clamp } from "../../common/utils/number.js";
+import { fmtSigned } from "../../common/utils/format.js";
 
 function roll1d10() {
   return 1 + Math.floor(Math.random() * 10);
@@ -170,42 +171,42 @@ export function HeaderSection({ model, children }) {
                 <td className="num">
                   <NumCell editable={editable} value={a.str} min={2} max={20} className="num" onCommit={(v) => setField(["abilities", "str"], v)} />
                 </td>
-                <td>{model.fmtSigned(mods.str)}</td>
+                <td>{fmtSigned(mods.str)}</td>
               </tr>
               <tr>
                 <td>器用さ</td>
                 <td className="num">
                   <NumCell editable={editable} value={a.dex} min={2} max={20} className="num" onCommit={(v) => setField(["abilities", "dex"], v)} />
                 </td>
-                <td>{model.fmtSigned(mods.dex)}</td>
+                <td>{fmtSigned(mods.dex)}</td>
               </tr>
               <tr>
                 <td>敏捷</td>
                 <td className="num">
                   <NumCell editable={editable} value={a.agi} min={2} max={20} className="num" onCommit={(v) => setField(["abilities", "agi"], v)} />
                 </td>
-                <td>{model.fmtSigned(mods.agi)}</td>
+                <td>{fmtSigned(mods.agi)}</td>
               </tr>
               <tr>
                 <td>生命力</td>
                 <td className="num">
                   <NumCell editable={editable} value={a.vit} min={2} max={20} className="num" onCommit={(v) => setField(["abilities", "vit"], v)} />
                 </td>
-                <td>{model.fmtSigned(mods.vit)}</td>
+                <td>{fmtSigned(mods.vit)}</td>
               </tr>
               <tr>
                 <td>知力</td>
                 <td className="num">
                   <NumCell editable={editable} value={a.int} min={2} max={20} className="num" onCommit={(v) => setField(["abilities", "int"], v)} />
                 </td>
-                <td>{model.fmtSigned(mods.int)}</td>
+                <td>{fmtSigned(mods.int)}</td>
               </tr>
               <tr>
                 <td>精神力</td>
                 <td className="num">
                   <NumCell editable={editable} value={a.psy} min={2} max={20} className="num" onCommit={(v) => setField(["abilities", "psy"], v)} />
                 </td>
-                <td>{model.fmtSigned(mods.psy)}</td>
+                <td>{fmtSigned(mods.psy)}</td>
               </tr>
             </tbody>
           </table>
@@ -237,7 +238,7 @@ export function HeaderSection({ model, children }) {
 
               <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2, textAlign: "right" }}>
                 <span style={{ opacity: 0.7 }}>{baseNormal}</span>{" "}
-                <span style={{ opacity: 0.7 }}>{model.fmtSigned(NormalRV)}</span>
+                <span style={{ opacity: 0.7 }}>{fmtSigned(NormalRV)}</span>
               </div>
             </div>
 
@@ -266,7 +267,7 @@ export function HeaderSection({ model, children }) {
 
               <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2, textAlign: "right" }}>
                 <span style={{ opacity: 0.7 }}>{baseWound}</span>{" "}
-                <span style={{ opacity: 0.7 }}>{model.fmtSigned(WoundRV)}</span>
+                <span style={{ opacity: 0.7 }}>{fmtSigned(WoundRV)}</span>
               </div>
             </div>
 
@@ -295,7 +296,7 @@ export function HeaderSection({ model, children }) {
 
               <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2, textAlign: "right" }}>
                 <span style={{ opacity: 0.7 }}>{baseMp}</span>{" "}
-                <span style={{ opacity: 0.7 }}>{model.fmtSigned(MpRV)}</span>
+                <span style={{ opacity: 0.7 }}>{fmtSigned(MpRV)}</span>
               </div>
             </div>
 

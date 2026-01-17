@@ -3,10 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 import HeroSheet from "./sheets/heroSheet/HeroSheet.jsx";
 import { defaultHeroState } from "./sheets/heroSheet/defaultHeroState.js";
-// import DivaSheet from "./sheets/divaSheet/DivaSheet.jsx";
-// import { defaultDivaState } from "./sheets/divaSheet/defaultDivaState.js";
-// import RarmSheet from "./sheets/rarmSheet/RarmSheet.jsx";
-// import { defaultRarmState } from "./sheets/rarmSheet/defaultRarmState.js";
+
 import CatalogSheet from "./sheets/catalogSheet/CatalogSheet.jsx";
 import { useCatalogSheetModel } from "./sheets/catalogSheet/useCatalogSheetModel.js";
 
@@ -22,47 +19,78 @@ const SHEETS = {
     Component: HeroSheet,
     defaultState: defaultHeroState,
   },
-  // diva: {
-  //   label: "歌姫",
-  //   path: "/sheets/diva",
-  //   kind: "stateful",
-  //   Component: DivaSheet,
-  //   defaultState: defaultDivaState,
-  // },
-  // rarm: {
-  //   label: "奏甲",
-  //   path: "/sheets/rarm",
-  //   kind: "stateful",
-  //   Component: RarmSheet,
-  //   defaultState: defaultRarmState,
-  // },
-  catalog: {
-    label: "カタログ",
-    path: "/sheets/catalog",
-    kind: "stateless",
-    Component: CatalogSheet,
-  },
+  // diva / rarm は省略
 };
 
 function isStatefulSheet(def) {
   return (def?.kind ?? "stateful") === "stateful";
 }
 
-/** CatalogSheet は state を持たないので Hub 側で model を作って渡す */
+/** 共有カタログ（state不要） */
 function CatalogSheetFeature() {
-  // 全シート共通の独自DB
   const model = useCatalogSheetModel({ scope: "shared", editable: true });
   return <CatalogSheet model={model} />;
+}
+
+/** 最小モーダル（UserCatalogModal の Modal を流用してもOK） */
+function Modal({ open, title = "自作データ管理", onClose, children }) {
+  if (!open) return null;
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.35)",
+        zIndex: 9999,
+        display: "grid",
+        placeItems: "center",
+        padding: 12,
+      }}
+    >
+      <div
+        style={{
+          width: "min(1100px, 96vw)",
+          maxHeight: "92vh",
+          overflow: "auto",
+          background: "#fff",
+          border: "2px solid #111",
+          borderRadius: 12,
+        }}
+      >
+        <div
+          style={{
+            padding: "10px 12px",
+            borderBottom: "1px solid rgba(0,0,0,0.12)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <div style={{ fontWeight: 900 }}>{title}</div>
+          <button type="button" className="sheet-btn" onClick={onClose}>
+            閉じる
+          </button>
+        </div>
+        <div style={{ padding: 12 }}>{children}</div>
+      </div>
+    </div>
+  );
 }
 
 export default function SheetHub() {
   const [sheetType, setSheetType] = useState("hero");
   const sheetDef = useMemo(() => SHEETS[sheetType] ?? SHEETS.hero, [sheetType]);
 
-  const [mode, setMode] = useState("view"); // "view" | "edit" | "create"
+  const [mode, setMode] = useState("view");
+  const [catalogOpen, setCatalogOpen] = useState(false);
 
   const [sheetState, setSheetState] = useState(() => {
-    // 初回は hero のローカル復元（なければデフォルト）
     return loadState({ sheetType: "hero" }) ?? SHEETS.hero.defaultState();
   });
 
@@ -71,12 +99,6 @@ export default function SheetHub() {
     if (!def) return;
 
     setSheetType(nextType);
-
-    // stateless は state を触らない
-    if (!isStatefulSheet(def)) {
-      setMode("view");
-      return;
-    }
 
     const restored = loadState({ sheetType: nextType }) ?? def.defaultState();
     setSheetState(restored);
@@ -122,12 +144,10 @@ export default function SheetHub() {
     saveState(imported, { sheetType });
   }
 
-  // 初回：URLから復元（hash）
   useEffect(() => {
     const param = readStateParamFromHash();
     const restored = decodeStateFromParam(param);
     if (restored && typeof restored === "object") {
-      // 共有URLはキャラstate前提なので hero に流し込む
       setSheetType("hero");
       setSheetState(restored);
       saveState(restored, { sheetType: "hero" });
@@ -154,13 +174,10 @@ export default function SheetHub() {
   }
 
   const SheetComponent = sheetDef.Component;
-  const isCatalog = sheetType === "catalog";
 
   return (
     <div>
-      {/* 上部ボタン列 */}
       <div style={{ display: "flex", gap: 8, margin: "8px 0", flexWrap: "wrap" }}>
-        {/* JSON（stateful のみ） */}
         <button type="button" onClick={handleJsonExport} disabled={!isStatefulSheet(sheetDef)}>
           JSON保存
         </button>
@@ -168,12 +185,11 @@ export default function SheetHub() {
           JSON読み出し
         </button>
 
-        {/* 自作データ */}
-        <button type="button" onClick={() => switchSheet("catalog")}>
+        {/* ここが「別シート」じゃなく「モーダルを開く」 */}
+        <button type="button" onClick={() => setCatalogOpen(true)}>
           自作データ管理
         </button>
 
-        {/* シート切替 */}
         <span style={{ marginLeft: 8, opacity: 0.7 }}>シート:</span>
         {Object.entries(SHEETS).map(([key, def]) => (
           <button
@@ -187,26 +203,27 @@ export default function SheetHub() {
         ))}
       </div>
 
-      {isCatalog ? (
+      <SheetComponent
+        state={sheetState}
+        mode={mode}
+        setState={(next) => {
+          setSheetState((prev) => {
+            const v = typeof next === "function" ? next(prev) : next;
+            saveState(v, { sheetType });
+            return v;
+          });
+        }}
+        onCreate={handleCreate}
+        onEdit={handleEdit}
+        onView={handleView}
+        onSaveHistory={handleSaveHistory}
+        onShare={handleShare}
+      />
+
+      {/* モーダルでカタログ */}
+      <Modal open={catalogOpen} onClose={() => setCatalogOpen(false)} title="自作データ管理">
         <CatalogSheetFeature />
-      ) : (
-        <SheetComponent
-          state={sheetState}
-          mode={mode}
-          setState={(next) => {
-            setSheetState((prev) => {
-              const v = typeof next === "function" ? next(prev) : next;
-              saveState(v, { sheetType });
-              return v;
-            });
-          }}
-          onCreate={handleCreate}
-          onEdit={handleEdit}
-          onView={handleView}
-          onSaveHistory={handleSaveHistory}
-          onShare={handleShare}
-        />
-      )}
+      </Modal>
     </div>
   );
 }

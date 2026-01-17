@@ -37,9 +37,8 @@ export function SideEquipmentSection({ model }) {
   const ownedShieldIds = ownedIdsOf("shield");
 
   // =========================
-  // ★変更点：両手/盾/左手の「強制解除」を全撤廃
   // ・装備はセットするだけ
-  // ・通常ルールと矛盾しそうな組み合わせは警告表示のみ
+  // ・通常ルールと矛盾しそうな組み合わせは警告表示
   // =========================
 
   function equipArmor(armorId) {
@@ -89,11 +88,6 @@ export function SideEquipmentSection({ model }) {
 
     const rightTwo = (wRight?.grip ?? "") === "両手";
     const leftTwo = (wLeft?.grip ?? "") === "両手";
-
-    // 旧データ互換：weaponTwoHanded は「無視」される（ただし警告）
-    if (eq?.weaponTwoHanded) {
-      warns.push("weaponTwoHanded=true（旧仕様フラグ）は現在の装備判定では無視されます。");
-    }
 
     // “通常ルールでは”不自然な組み合わせを警告
     if (rightTwo && (leftId != null || shieldId != null)) {
