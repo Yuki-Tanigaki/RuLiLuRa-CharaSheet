@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "name": "小盾",
+    "price": null,
+    "fp": null,
+    "maintenance": "",
+    "tl": 1,
+    "slot": "shield",
+    "armorBonus": 1,
+    "requirementSkills": {},
+    "weight": 1,
+    "type": "small",
+    "memo": ""
+  },
+  {
+    "id": 2,
+    "name": "カイトシールド",
+    "price": null,
+    "fp": null,
+    "maintenance": "",
+    "tl": 2,
+    "slot": "shield",
+    "armorBonus": 2,
+    "requirementSkills": {},
+    "weight": 2,
+    "type": "medium",
+    "memo": ""
+  },
+  {
+    "id": 3,
+    "name": "大盾",
+    "price": null,
+    "fp": null,
+    "maintenance": "",
+    "tl": 2,
+    "slot": "shield",
+    "armorBonus": 3,
+    "requirementSkills": {},
+    "weight": 3,
+    "type": "large",
+    "memo": ""
+  },
+  {
+    "id": 4,
+    "name": "シュツルムシールド",
+    "price": null,
+    "fp": null,
+    "maintenance": "",
+    "tl": 3,
+    "slot": "shield",
+    "armorBonus": 4,
+    "requirementSkills": {},
+    "weight": 4,
+    "type": "assault",
+    "memo": ""
+  },
+  {
+    "id": 5,
+    "name": "重積シールド",
+    "price": null,
+    "fp": null,
+    "maintenance": "",
+    "tl": 4,
+    "slot": "shield",
+    "armorBonus": 5,
+    "requirementSkills": {},
+    "weight": 5,
+    "type": "heavy",
+    "memo": ""
+  }
+]

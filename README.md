@@ -17,6 +17,7 @@ node -v
 npm -v
 npm install
 npm install lz-string
+npm i -D vitest jsdom
 ```
 
 # ローカルで起動

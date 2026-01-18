@@ -1,4 +1,4 @@
-// src/pages/sheets/common/inventory.js
+// src/common/inventory.js
 
 import { safeNum } from "./utils/number.js";
 

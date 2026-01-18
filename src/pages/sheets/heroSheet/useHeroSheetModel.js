@@ -1,21 +1,12 @@
 // src/pages/sheets/heroSheet/useHeroSheetModel.js
 import { useEffect, useMemo, useState } from "react";
 
-import { SKILLS_MASTER, SKILL_ID_EVADE } from "../../../data/skillsMaster.js";
-import { HERO_SKILLS_MASTER } from "../../../data/heroSkillsMaster.js";
-import { WEAPONS_MASTER } from "../../../data/weaponsMaster.js";
-import { ARMORS_MASTER } from "../../../data/armorsMaster.js";
-import { SHIELDS_MASTER } from "../../../data/shieldsMaster.js";
-import { TOOLS_MASTER } from "../../../data/toolsMaster.js";
-
-import { useSetField } from "../common/useSetField.js";
-import { safeNum } from "../common/utils/number.js";
-import { normalizeRequirement, normalizeThresholdKey, labelFromMaster } from "../common/normalize.js";
-import { resolveCatalogRef, catalogKeyOf } from "../common/catalog.js";
-import { normalizeInventory as normalizeInv, addQty } from "../common/inventory.js";
-import { normalizeUnlock } from "../common/unlockItems.js";
-
-import { loadUserCatalog } from "../common/userCatalog.js";
+import { safeNum } from "/src/common/utils/number.js";
+import { normalizeRequirement, normalizeThresholdKey, labelFromMaster } from "/src/common/normalize.js";
+import { all as mastersAll } from "/src/common/catalog.js";
+import { mergeCatalog } from "/src/common/catalogMerge.js";
+import { normalizeInventory as normalizeInv, addQty } from "/src/common/inventory.js";
+import { normalizeItemBonus, resolveBonusTargetByName } from "/src/common/itemBonus.js";
 
 // hero 固有
 import { calcHeroDerived } from "./derivatives.js";
@@ -60,46 +51,36 @@ export function useHeroSheetModel({ state, mode, setState }) {
     };
   }, []);
 
-  // ---- catalog (masters + userCatalog(shared)) ----
+  // ---- catalog (masters + userCatalog() ----
   const catalog = useMemo(() => {
-    const w = (Array.isArray(WEAPONS_MASTER) ? WEAPONS_MASTER : []).map((x) => ({
-      kind: "weapon",
-      source: "master",
-      ...x,
-    }));
-    const a2 = (Array.isArray(ARMORS_MASTER) ? ARMORS_MASTER : []).map((x) => ({
-      kind: "armor",
-      source: "master",
-      ...x,
-    }));
-    const sh = (Array.isArray(SHIELDS_MASTER) ? SHIELDS_MASTER : []).map((x) => ({
-      kind: "shield",
-      source: "master",
-      ...x,
-    }));
-    const it = (Array.isArray(TOOLS_MASTER) ? TOOLS_MASTER : []).map((x) => ({
-      kind: "tool",
-      source: "master",
-      ...x,
-    }));
+    const mastersByKind = {
+      weapon: mastersAll("weapon"),
+      armor: mastersAll("armor"),
+      shield: mastersAll("shield"),
+      tool: mastersAll("tool"),
+    };
 
-    const uw = (userCatalog.weapons ?? []).map((x) => ({ kind: "weapon", source: "user", ...x }));
-    const ua = (userCatalog.armors ?? []).map((x) => ({ kind: "armor", source: "user", ...x }));
-    const ush = (userCatalog.shields ?? []).map((x) => ({ kind: "shield", source: "user", ...x }));
-    const uit = (userCatalog.tools ?? []).map((x) => ({ kind: "tool", source: "user", ...x }));
+    // userCatalog 側のキーが（weapons/armors...）なので、mergeCatalog 用に正規化
+    const userByKind = {
+      weapon: userCatalog?.weapons ?? [],
+      armor: userCatalog?.armors ?? [],
+      shield: userCatalog?.shields ?? [],
+      tool: userCatalog?.tools ?? [],
+    };
 
-    // unlock 等の参照解決に使うため、スキル系も混ぜる
-    const usk = (userCatalog.skills ?? []).map((x) => ({ kind: "skill", source: "user", ...x }));
-    const uhs = (userCatalog.heroSkills ?? []).map((x) => ({ kind: "heroSkill", source: "user", ...x }));
-
-    return [...w, ...a2, ...sh, ...it, ...uw, ...ua, ...ush, ...uit, ...usk, ...uhs];
+    return mergeCatalog({
+      mastersByKind,
+      userCatalog: userByKind,
+      sort: true,
+    });
   }, [userCatalog]);
 
+  // =========================
+  // catalog lookup helper
+  // =========================
   function defByKindId(kind, id) {
-    const k = String(kind);
     if (id == null || String(id).trim() === "") return null;
-    const idStr = String(id);
-    return catalog.find((c) => c.kind === k && String(c.id) === idStr) ?? null;
+    return catalog.resolve(String(kind), { id }) ?? null; // source省略→ master優先で検索
   }
 
   // =========================
@@ -116,8 +97,8 @@ export function useHeroSheetModel({ state, mode, setState }) {
   function removeFromInventory(kind, id) {
     setField(["equipment", "inventory"], (prev) => {
       const cur = normalizeInv(prev);
-      const key = catalogKeyOf(kind, id);
-      return cur.filter((e) => catalogKeyOf(e.kind, e.id) !== key);
+      const key = `${String(kind)}:${String(id)}`;
+      return cur.filter((e) => `${String(e.kind)}:${String(e.id)}` !== key);
     });
   }
 
@@ -341,16 +322,22 @@ export function useHeroSheetModel({ state, mode, setState }) {
     const def = skillDefByName(skillName);
     if (!def?.unlock) return [];
 
-    const rows = normalizeUnlock(def.unlock);
+    const rows = normalizeItemBonus(def.unlock);
     const out = [];
 
     for (const r of rows) {
-      const th = normalizeThresholdKey(r.at);
-      if (th == null) continue;
+      const threshold = Number(r.at);
+      if (!Number.isFinite(threshold)) continue;
 
-      const rewards = (r.refs ?? []).map((ref) => resolveCatalogRef(ref, catalog)).filter(Boolean);
+      const rewards = (r.items ?? [])
+        .map(({ name, qty }) => {
+          const resolved = resolveBonusTargetByName(name, catalog);
+          if (!resolved) return null;
+          return { resolved, qty: Math.max(1, Math.trunc(Number(qty) || 1)) };
+        })
+        .filter(Boolean);
 
-      if (rewards.length > 0) out.push({ threshold: th, rewards });
+      if (rewards.length > 0) out.push({ threshold, rewards });
     }
 
     return out.slice().sort((p, q) => p.threshold - q.threshold);

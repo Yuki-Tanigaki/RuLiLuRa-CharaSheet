@@ -1,77 +1,45 @@
 // src/pages/sheets/heroSheet/sections/HeaderSection.jsx
 import React, { useMemo, useState } from "react";
-import { TextCell } from "../../components/TextCell.jsx";
-import { NumCell } from "../../components/NumCell.jsx";
-import { safeNum, clamp } from "../../common/utils/number.js";
-import { fmtSigned } from "../../common/utils/format.js";
+import { TextCell } from "/src/pages/sheets/components/TextCell.jsx";
+import { NumCell } from "/src/pages/sheets/components/NumCell.jsx";
+import { safeNum } from "/src/common/utils/number.js";
+import { fmtSigned } from "/src/common/utils/format.js";
 
-function roll1d10() {
-  return 1 + Math.floor(Math.random() * 10);
-}
-function roll2d10() {
-  return roll1d10() + roll1d10();
-}
+import {
+  ABILITY_KEYS,
+  rollAbilities2d10,
+  calcAbilitySum,
+  isPointOk,
+  canReroll as canRerollSum,
+  swapValues,
+  applyRolledAbilities as applyRolledAbilitiesAction,
+  setInitialMoney,
+  buildHeaderDerived,
+} from "./headerSection.logic.js";
 
 export function HeaderSection({ model, children }) {
-  const { s, a, mods, hp, editable, isCreate, setField, moneyG, fp } = model;
+  // ✅ model からは「状態と更新手段とモード」だけもらう
+  const { s, editable, isCreate, setField } = model;
 
-  // current（stateに保存しているHP/MP補正値）
-  const NormalRV = safeNum(s?.resources?.hpNormalRV, 0);
-  const WoundRV  = safeNum(s?.resources?.hpWoundRV,  0);
-  const MpRV     = safeNum(s?.resources?.mpRV,       0);
+  // ✅ a/mods/hp/res/moneyG/fp は state から計算して使う
+  const derived = useMemo(() => buildHeaderDerived(s), [s]);
+  const { a, mods, hp, res, moneyG, fp } = derived;
+  const { NormalRV, WoundRV, MpRV, baseNormal, baseWound, baseMp, shownNormal, shownWound, shownMp } = res;
 
-  // base（能力値からの基礎：いままで表示してた値）
-  const baseNormal = safeNum(hp?.hpNormal, 0);
-  const baseWound  = safeNum(hp?.hpWound, 0);
-  const baseMp     = safeNum(hp?.mp, 0);
-
-  // shown（表示する最終値）
-  const shownNormal = baseNormal + NormalRV;
-  const shownWound  = baseWound + WoundRV;
-  const shownMp     = baseMp + MpRV;
-
-  const abilityKeys = useMemo(
-    () => [
-      { k: "str", label: "筋力" },
-      { k: "dex", label: "器用さ" },
-      { k: "agi", label: "敏捷" },
-      { k: "vit", label: "生命力" },
-      { k: "int", label: "知力" },
-      { k: "psy", label: "精神力" },
-    ],
-    []
-  );
-
-  const abilitySum = abilityKeys.reduce((acc, x) => acc + safeNum(a?.[x.k], 0), 0);
-  const abilityValidRange = abilityKeys.every((x) => {
-    const v = safeNum(a?.[x.k], 0);
-    return v >= 2;
-  });
-  const pointOk = abilityValidRange && abilitySum === 70;
+  const abilityKeys = useMemo(() => ABILITY_KEYS, []);
+  const abilitySum = useMemo(() => calcAbilitySum(a), [a]);
+  const pointOk = useMemo(() => isPointOk(a), [a]);
 
   const [lastRoll, setLastRoll] = useState(null); // {values:{...}, sum}
-  const canReroll = (lastRoll?.sum ?? 0) <= 65;
+  const canReroll = canRerollSum(lastRoll?.sum);
 
   function doRoll2d10() {
-    const values = {};
-    for (const x of abilityKeys) values[x.k] = roll2d10();
-    const sum = abilityKeys.reduce((acc, x) => acc + safeNum(values[x.k], 0), 0);
-    setLastRoll({ values, sum });
+    setLastRoll(rollAbilities2d10());
   }
 
   function applyRolledAbilities() {
     if (!lastRoll?.values) return;
-    const v = lastRoll.values;
-    setField(["abilities"], (prev) => ({
-      ...(prev ?? {}),
-      method: "roll",
-      str: clamp(v.str, 2, 20),
-      dex: clamp(v.dex, 2, 20),
-      agi: clamp(v.agi, 2, 20),
-      vit: clamp(v.vit, 2, 20),
-      int: clamp(v.int, 2, 20),
-      psy: clamp(v.psy, 2, 20),
-    }));
+    applyRolledAbilitiesAction(setField, lastRoll.values);
   }
 
   const [swapA, setSwapA] = useState("str");
@@ -79,28 +47,15 @@ export function HeaderSection({ model, children }) {
 
   function swapAbilities() {
     if (swapA === swapB) return;
+    if (!lastRoll?.values) return;
 
-    if (lastRoll?.values) {
-      setLastRoll((prev) => {
-        if (!prev?.values) return prev;
-        const v = { ...prev.values };
-        const va = safeNum(v[swapA], 0);
-        const vb = safeNum(v[swapB], 0);
-        v[swapA] = vb;
-        v[swapB] = va;
-
-        const sum = abilityKeys.reduce((acc, x) => acc + safeNum(v[x.k], 0), 0);
-        return { ...prev, values: v, sum };
-      });
-      return;
-    }
+    const values = swapValues(lastRoll.values, swapA, swapB);
+    const sum = calcAbilitySum(values);
+    setLastRoll({ values, sum });
   }
 
   function setInitialMoneyFromIntDex() {
-    const i = safeNum(a?.int, 0);
-    const dx = safeNum(a?.dex, 0);
-    const g = Math.max(0, i * dx * 1000);
-    setField(["equipment", "moneyG"], g);
+    setInitialMoney(setField, a);
   }
 
   return (
@@ -300,7 +255,6 @@ export function HeaderSection({ model, children }) {
               </div>
             </div>
 
-
             {/* 所持金 / FP */}
             <div style={{ marginTop: 10, display: "grid", gap: 6, fontSize: 12 }}>
               <div style={{ display: "grid", gridTemplateColumns: "70px 1fr", alignItems: "center", gap: 8 }}>
@@ -325,14 +279,7 @@ export function HeaderSection({ model, children }) {
                 <div style={{ opacity: 0.75 }}>FP</div>
                 <div style={{ textAlign: "right" }}>
                   {editable ? (
-                    <NumCell
-                      editable={editable}
-                      value={fp}
-                      min={0}
-                      max={9999}
-                      className="num"
-                      onCommit={(v) => setField(["equipment", "fp"], v)}
-                    />
+                    <NumCell editable={editable} value={fp} min={0} max={9999} className="num" onCommit={(v) => setField(["equipment", "fp"], v)} />
                   ) : (
                     <span className="num">{safeNum(fp)}</span>
                   )}
@@ -390,7 +337,8 @@ export function HeaderSection({ model, children }) {
               <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
                 ロール合計: <b>{lastRoll.sum}</b>{" "}
                 <span style={{ opacity: 0.8 }}>
-                  （筋{lastRoll.values.str}, 器{lastRoll.values.dex}, 敏{lastRoll.values.agi}, 生{lastRoll.values.vit}, 知{lastRoll.values.int}, 精{lastRoll.values.psy}）
+                  （筋{lastRoll.values.str}, 器{lastRoll.values.dex}, 敏{lastRoll.values.agi}, 生{lastRoll.values.vit}, 知{lastRoll.values.int},
+                  精{lastRoll.values.psy}）
                 </span>
               </div>
             )}

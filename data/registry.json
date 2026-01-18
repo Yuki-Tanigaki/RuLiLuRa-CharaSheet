@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "categories": {
+    "skill": {
+      "label": "スキル",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/skills.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "class", "type": "string[]", "default": [] },
+        { "key": "itemBonus", "type": "itemBonus", "default": {} },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "heroArt": {
+      "label": "英雄能力",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/heroArts.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "divaArt": {
+      "label": "歌姫能力",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/divaArts.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "unlockActions", "type": "string[]", "default": [] },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "divaAction": {
+      "label": "歌姫アクション",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/divaActions.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "turnAction", "type": "boolean", "default": false },
+        { "key": "cost", "type": "string", "default": "" },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "song": {
+      "label": "歌術",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/songs.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "cost", "type": "string", "default": "" },
+        { "key": "range", "type": "string", "default": "" },
+        { "key": "duration", "type": "string", "default": "" },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "ng": {
+      "label": "NG行動",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/ngs.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "class", "type": "string", "default": "" },
+        { "key": "count", "type": "number", "default": 1 },
+        { "key": "content", "type": "string", "default": "" },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "weapon": {
+      "label": "個人装備（武器）",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/weapons.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "price", "type": "number", "default": null },
+        { "key": "fp", "type": "number", "default": null },
+        { "key": "tl", "type": "number", "default": 1 },
+        { "key": "grip", "type": "string", "default": "片手" },
+        { "key": "range", "type": "string", "default": "自" },
+        { "key": "attacks", "type": "string", "default": "1/T" },
+        { "key": "baseAccuracy", "type": "number", "default": 0 },
+        { "key": "skill", "type": "string", "default": "接近戦" },
+        { "key": "antiArmor", "type": "number", "default": 0 },
+        { "key": "damage", "type": "string", "default": "1D10 - 3 + {筋力修正}" },
+        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "shield": {
+      "label": "個人装備（盾）",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/shields.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "price", "type": "number", "default": null },
+        { "key": "fp", "type": "number", "default": null },
+        { "key": "tl", "type": "number", "default": 1 },
+        { "key": "grip", "type": "string", "default": "片手" },
+        { "key": "evadeMod", "type": "number", "default": 0 },
+        { "key": "armorBonus", "type": "number", "default": 0 },
+        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "armor": {
+      "label": "個人装備（防具）",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/armors.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "price", "type": "number", "default": null },
+        { "key": "fp", "type": "number", "default": null },
+        { "key": "tl", "type": "number", "default": 1 },
+        { "key": "evadeMod", "type": "number", "default": 0 },
+        { "key": "armorBonus", "type": "number", "default": 0 },
+        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "tool": {
+      "label": "道具",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/tools.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "price", "type": "number", "default": null },
+        { "key": "fp", "type": "number", "default": null },
+        { "key": "qty", "type": "number", "default": 1 },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "armament": {
+      "label": "奏甲装備（武器）",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/armaments.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "price", "type": "number", "default": null },
+        { "key": "fp", "type": "number", "default": null },
+        { "key": "maintenance", "type": "string", "default": "" },
+        { "key": "tl", "type": "number", "default": 1 },
+        { "key": "slot", "type": "string", "default": "" },
+        { "key": "range", "type": "string", "default": "自" },
+        { "key": "attacks", "type": "string", "default": "1/T" },
+        { "key": "baseAccuracy", "type": "number", "default": 0 },
+        { "key": "skill", "type": "string", "default": "接近戦" },
+        { "key": "damage", "type": "string", "default": "1D10 - 3 + {筋力修正}" },
+        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "weight", "type": "number", "default": 1 },
+        { "key": "class", "type": "string", "default": "" },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "protection": {
+      "label": "奏甲装備（盾）",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/protections.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "price", "type": "number", "default": null },
+        { "key": "fp", "type": "number", "default": null },
+        { "key": "maintenance", "type": "string", "default": "" },
+        { "key": "tl", "type": "number", "default": 1 },
+        { "key": "slot", "type": "string", "default": "" },
+        { "key": "armorBonus", "type": "number", "default": 0 },
+        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "weight", "type": "number", "default": 1 },
+         { "key": "class", "type": "string", "default": "" },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "special": {
+      "label": "奏甲装備（特殊）",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/specials.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "price", "type": "number", "default": null },
+        { "key": "fp", "type": "number", "default": null },
+        { "key": "maintenance", "type": "string", "default": "" },
+        { "key": "tl", "type": "number", "default": 1 },
+        { "key": "slot", "type": "string", "default": "" },
+        { "key": "armorBonus", "type": "number", "default": 0 },
+        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "weight", "type": "number", "default": 1 },
+        { "key": "class", "type": "string", "default": "" },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    },
+
+    "upgrade": {
+      "label": "チューンナップ（奏甲）",
+      "idField": "id",
+      "nameField": "name",
+      "source": "/data/masters/upgrades.json",
+      "fields": [
+        { "key": "id", "type": "number", "required": true },
+        { "key": "name", "type": "string", "required": true },
+        { "key": "memo", "type": "string", "default": "" }
+      ]
+    }
+  }
+}

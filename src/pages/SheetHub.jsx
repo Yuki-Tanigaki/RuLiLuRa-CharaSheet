@@ -5,7 +5,6 @@ import HeroSheet from "./sheets/heroSheet/HeroSheet.jsx";
 import { defaultHeroState } from "./sheets/heroSheet/defaultHeroState.js";
 
 import CatalogSheet from "./sheets/catalogSheet/CatalogSheet.jsx";
-import { useCatalogSheetModel } from "./sheets/catalogSheet/useCatalogSheetModel.js";
 
 import { commitHistory } from "../lib/versioning.js";
 import { buildShareUrl, decodeStateFromParam, readStateParamFromHash } from "../lib/shareUrl.js";
@@ -13,7 +12,7 @@ import { exportJson, importJsonViaPicker, saveState, loadState } from "../lib/st
 
 const SHEETS = {
   hero: {
-    label: "英雄",
+    label: "英雄シート",
     path: "/sheets/hero",
     kind: "stateful",
     Component: HeroSheet,
@@ -24,12 +23,6 @@ const SHEETS = {
 
 function isStatefulSheet(def) {
   return (def?.kind ?? "stateful") === "stateful";
-}
-
-/** 共有カタログ（state不要） */
-function CatalogSheetFeature() {
-  const model = useCatalogSheetModel({ scope: "shared", editable: true });
-  return <CatalogSheet model={model} />;
 }
 
 /** 最小モーダル（UserCatalogModal の Modal を流用してもOK） */
@@ -175,6 +168,15 @@ export default function SheetHub() {
 
   const SheetComponent = sheetDef.Component;
 
+  // SheetComponent へ渡してる setState と “同じラッパ” を CatalogSheet にも渡す
+  const setStateWithPersist = (next) => {
+    setSheetState((prev) => {
+      const v = typeof next === "function" ? next(prev) : next;
+      saveState(v, { sheetType });
+      return v;
+    });
+  };
+
   return (
     <div>
       <div style={{ display: "flex", gap: 8, margin: "8px 0", flexWrap: "wrap" }}>
@@ -185,7 +187,7 @@ export default function SheetHub() {
           JSON読み出し
         </button>
 
-        {/* ここが「別シート」じゃなく「モーダルを開く」 */}
+        {/* 「別シート」じゃなく「モーダルを開く」 */}
         <button type="button" onClick={() => setCatalogOpen(true)}>
           自作データ管理
         </button>
@@ -206,13 +208,7 @@ export default function SheetHub() {
       <SheetComponent
         state={sheetState}
         mode={mode}
-        setState={(next) => {
-          setSheetState((prev) => {
-            const v = typeof next === "function" ? next(prev) : next;
-            saveState(v, { sheetType });
-            return v;
-          });
-        }}
+        setState={setStateWithPersist}
         onCreate={handleCreate}
         onEdit={handleEdit}
         onView={handleView}
@@ -220,9 +216,9 @@ export default function SheetHub() {
         onShare={handleShare}
       />
 
-      {/* モーダルでカタログ */}
+      {/* モーダルでカタログ：state/setState をそのまま渡す */}
       <Modal open={catalogOpen} onClose={() => setCatalogOpen(false)} title="自作データ管理">
-        <CatalogSheetFeature />
+        <CatalogSheet state={sheetState} setState={setStateWithPersist} />
       </Modal>
     </div>
   );

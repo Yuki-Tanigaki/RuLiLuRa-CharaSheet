@@ -1,5 +1,4 @@
 // src/pages/sheets/heroSheet/defaultHeroState.js
-import { defaultCatalogState } from "../catalogSheet/defaultCatalogState.js";
 
 export function defaultHeroState() {
   return {
@@ -54,8 +53,6 @@ export function defaultHeroState() {
         shieldId: null,
       },
     },
-    // ユーザが独自に定義したカタログ
-    userCatalog: defaultCatalogState(),
     memo: "",
   };
 }

@@ -1,4 +1,4 @@
-// src/pages/sheets/common/normalize.js
+// src/common/normalize.js
 
 /**
  * 要件の正規化

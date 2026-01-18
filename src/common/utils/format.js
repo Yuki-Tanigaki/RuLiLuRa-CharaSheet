@@ -1,4 +1,4 @@
-// src/pages/sheets/common/utils/format.js
+// src/common/utils/format.js
 
 import { safeNum } from "./number.js";
 

@@ -1,0 +1,261 @@
+[
+    { 
+        "id": 1, 
+        "name": "姉妹との交渉", 
+        "turnAction": true,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 2, 
+        "name": "戦闘支援（ダメージ）", 
+        "turnAction": true,
+        "cost": "肉体1回"
+    },
+    { 
+        "id": 3, 
+        "name": "戦闘支援（命中値）", 
+        "turnAction": true,
+        "cost": "肉体1回"
+    },
+    { 
+        "id": 4, 
+        "name": "突撃", 
+        "turnAction": true,
+        "cost": "肉体2回"
+    },
+    { 
+        "id": 5, 
+        "name": "戦闘回避", 
+        "turnAction": false,
+        "cost": "肉体2回"
+    },
+    { 
+        "id": 6, 
+        "name": "コネでの交渉", 
+        "turnAction": false,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 7, 
+        "name": "英雄の危機", 
+        "turnAction": true,
+        "cost": "絆2回"
+    },
+    { 
+        "id": 8, 
+        "name": "パワーモード", 
+        "turnAction": false,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 9, 
+        "name": "射撃モード", 
+        "turnAction": false,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 10, 
+        "name": "甲殻モード", 
+        "turnAction": false,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 11, 
+        "name": "スピードモード", 
+        "turnAction": false,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 12, 
+        "name": "待ち伏せモード", 
+        "turnAction": false,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 13, 
+        "name": "リミッタOffモード", 
+        "turnAction": false,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 14, 
+        "name": "障害モード回避", 
+        "turnAction": false,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 15, 
+        "name": "起動延長", 
+        "turnAction": false,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 16, 
+        "name": "秘められた力", 
+        "turnAction": true,
+        "cost": "気力1回, 肉体1回, 絆1回"
+    },
+    { 
+        "id": 17, 
+        "name": "歌姫の提案", 
+        "turnAction": true,
+        "cost": "絆1回"
+    },
+    { 
+        "id": 18, 
+        "name": "看破", 
+        "turnAction": true,
+        "cost": "気力2回"
+    },
+    { 
+        "id": 19, 
+        "name": "的確な対応", 
+        "turnAction": true,
+        "cost": "絆2回"
+    },
+    { 
+        "id": 20, 
+        "name": "「知らないわ…」", 
+        "turnAction": false,
+        "cost": ""
+    },
+    { 
+        "id": 21, 
+        "name": "失踪", 
+        "turnAction": true,
+        "cost": ""
+    },
+    { 
+        "id": 22, 
+        "name": "ご託宣", 
+        "turnAction": true,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 23, 
+        "name": "「GO GO!」", 
+        "turnAction": false,
+        "cost": ""
+    },
+    { 
+        "id": 24, 
+        "name": "「あれっ、何だっけ？」", 
+        "turnAction": true,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 25, 
+        "name": "どじ", 
+        "turnAction": true,
+        "cost": ""
+    },
+    { 
+        "id": 26, 
+        "name": "破壊工作", 
+        "turnAction": false,
+        "cost": "気力2回"
+    },
+    { 
+        "id": 27, 
+        "name": "ご奉仕", 
+        "turnAction": true,
+        "cost": "肉体2回"
+    },
+    { 
+        "id": 28, 
+        "name": "癒し", 
+        "turnAction": true,
+        "cost": "気力2回"
+    },
+    { 
+        "id": 29, 
+        "name": "ぷに", 
+        "turnAction": true,
+        "cost": "気力1回"
+    },
+    { 
+        "id": 30, 
+        "name": "励まし", 
+        "turnAction": true,
+        "cost": "気力2回"
+    },
+    { 
+        "id": 31, 
+        "name": "指導", 
+        "turnAction": true,
+        "cost": "気力1回"
+    },
+  { 
+      "id": 32, 
+      "name": "あおり", 
+      "turnAction": true,
+      "cost": "気力2回"
+  },
+  { 
+      "id": 33, 
+      "name": "あんたなんかーっ！", 
+      "turnAction": false,
+      "cost": ""
+  },
+  { 
+      "id": 34, 
+      "name": "逆ギレ", 
+      "turnAction": false,
+      "cost": "絆3回"
+  },
+  { 
+      "id": 35, 
+      "name": "二人だけのひととき", 
+      "turnAction": false,
+      "cost": ""
+  },
+  { 
+      "id": 36, 
+      "name": "こっそりアクション", 
+      "turnAction": true,
+      "cost": "絆2回"
+  },
+  { 
+      "id": 37, 
+      "name": "あきらめ", 
+      "turnAction": true,
+      "cost": "気力2回"
+  },
+  { 
+    "id": 38, 
+    "name": "鋼の肉体", 
+    "turnAction": true,
+    "cost": "気力2回"
+  },
+  { 
+    "id": 39, 
+    "name": "値切り", 
+    "turnAction": true,
+    "cost": "気力1回"
+  },
+  { 
+    "id": 40, 
+    "name": "無心", 
+    "turnAction": true,
+    "cost": "絆2回"
+  },
+  { 
+    "id": 41, 
+    "name": "歌術ブースト",
+    "turnAction": true,
+    "cost": "肉体1回"
+  },
+  { 
+    "id": 42, 
+    "name": "金をかき集める",
+    "turnAction": false,
+    "cost": "絆2回"
+  },
+  { 
+    "id": 43, 
+    "name": "情報を集める",
+    "turnAction": false,
+    "cost": "肉体1回"
+  }
+]
+    

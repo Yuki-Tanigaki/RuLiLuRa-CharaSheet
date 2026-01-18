@@ -1,0 +1,148 @@
+[
+    {
+        "id": 0,
+        "name": "肉体1_1",
+        "type": "肉体",
+        "count": 1,
+        "content": "奏甲を1日8時間以上起動した",
+        "memo": ""
+    },
+    {
+        "id": 1,
+        "name": "肉体1_2",
+        "type": "肉体",
+        "count": 1,
+        "content": "戦闘に巻き込まれた",
+        "memo": ""
+    },
+    {
+        "id": 2,
+        "name": "肉体1_3",
+        "type": "肉体",
+        "count": 1,
+        "content": "重要な能力・スキルチェックに失敗した",
+        "memo": ""
+    },
+    {
+        "id": 3,
+        "name": "肉体2_1",
+        "type": "肉体",
+        "count": 2,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 4,
+        "name": "肉体2_2",
+        "type": "肉体",
+        "count": 2,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 5,
+        "name": "肉体2_3",
+        "type": "肉体",
+        "count": 2,
+        "content": "",
+        "memo": ""
+    },
+
+    {
+        "id": 6,
+        "name": "気力1_1",
+        "type": "気力",
+        "count": 1,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 7,
+        "name": "気力1_2",
+        "type": "気力",
+        "count": 1,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 8,
+        "name": "気力1_3",
+        "type": "気力",
+        "count": 1,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 9,
+        "name": "気力2_1",
+        "type": "気力",
+        "count": 2,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 10,
+        "name": "気力2_2",
+        "type": "気力",
+        "count": 2,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 11,
+        "name": "気力2_3",
+        "type": "気力",
+        "count": 2,
+        "content": "",
+        "memo": ""
+    },
+
+    {
+        "id": 12,
+        "name": "絆1_1",
+        "type": "絆",
+        "count": 1,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 13,
+        "name": "絆1_2",
+        "type": "絆",
+        "count": 1,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 14,
+        "name": "絆1_3",
+        "type": "絆",
+        "count": 1,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 15,
+        "name": "絆2_1",
+        "type": "絆",
+        "count": 2,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 16,
+        "name": "絆2_2",
+        "type": "絆",
+        "count": 2,
+        "content": "",
+        "memo": ""
+    },
+    {
+        "id": 17,
+        "name": "絆2_3",
+        "type": "絆",
+        "count": 2,
+        "content": "",
+        "memo": ""
+    }
+]

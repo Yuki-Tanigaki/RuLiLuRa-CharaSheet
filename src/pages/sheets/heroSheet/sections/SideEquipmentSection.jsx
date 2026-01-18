@@ -1,8 +1,8 @@
 // src/pages/sheets/heroSheet/sections/SideEquipmentSection.jsx
 import React, { useMemo } from "react";
-import { normalizeRequirement } from "../../common/normalize.js";
-import { safeNum } from "../../common/utils/number.js";
-import { fmtSigned } from "../../common/utils/format.js";
+import { normalizeRequirement } from "/src/common/normalize.js";
+import { safeNum } from "/src/common/utils/number.js";
+import { fmtSigned } from "/src/common/utils/format.js";
 
 function renderRequirementText(req) {
   const r = normalizeRequirement(req);

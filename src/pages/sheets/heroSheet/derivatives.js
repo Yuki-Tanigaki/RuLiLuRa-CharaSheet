@@ -1,6 +1,6 @@
 // src/pages/sheets/heroSheet/derivatives.js
 
-import { safeNum } from "../common/utils/number.js";
+import { safeNum } from "/src/common/utils/number.js";
 
 /**
  * 能力修正（SW系によくある「10を基準」）

@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "小盾",
+    "price": 4000,
+    "fp": null,
+    "tl": 1,
+    "grip": "片手",
+    "evadeMod": 0,
+    "armorBonus": 2,
+    "requirementSkills": {"盾防御": 10},
+    "memo": ""
+  },
+  {
+    "id": 2,
+    "name": "盾",
+    "price": 10000,
+    "fp": null,
+    "tl": 1,
+    "grip": "片手",
+    "evadeMod": 0,
+    "armorBonus": 3,
+    "requirementSkills": {"盾防御": 16},
+    "memo": "この盾を装備している間は、《回避》スキルに＋５してよい（自動で反映されないため注意）"
+  },
+  {
+    "id": 3,
+    "name": "大型の盾",
+    "price": 20000,
+    "fp": null,
+    "tl": 1,
+    "grip": "片手",
+    "evadeMod": -10,
+    "armorBonus": 6,
+    "requirementSkills": {"盾防御": 22},
+    "memo": ""
+  }
+]

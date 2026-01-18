@@ -1,7 +1,7 @@
 // src/pages/sheets/heroSheet/combat.js
 
-import { safeNum, clamp } from "../common/utils/number.js";
-import { normalizeRequirement } from "../common/normalize.js";
+import { safeNum, clamp } from "/src/common/utils/number.js";
+import { normalizeRequirement } from "/src/common/normalize.js";
 
 /**
  * 英雄シートの戦闘系（命中/回避/要件ペナルティ等）を “純粋関数” としてまとめる。

@@ -1,4 +1,4 @@
-// src/pages/sheets/common/utils/number.js
+// src/common/utils/number.js
 
 /**
  * 値を number に変換できれば number、できなければ null を返す

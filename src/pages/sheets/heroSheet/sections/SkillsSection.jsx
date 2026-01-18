@@ -1,534 +1,141 @@
 // src/pages/sheets/heroSheet/sections/SkillsSection.jsx
-import React, { useEffect, useMemo, useRef } from "react";
-import { NumCell } from "../../components/NumCell.jsx";
-import { safeNum } from "../../common/utils/number.js";
-import { catalogKeyOf } from "../../common/catalog.js";
-import { kindLabel } from "../kindLabel.js";
+import React from "react";
+import { NumCell } from "/src/pages/sheets/components/NumCell.jsx";
+import { safeNum } from "/src/common/utils/number.js";
+import { encodeCatalogKey } from "/src/common/catalogKey.js";
 
-const CREATE_SKILL_COUNT = 8;
-const CREATE_BASE_LEVELS = [5, 10, 15, 20];
-const CREATE_BASE_SUM_LIMIT = 80;
+import { useSkillsSectionLogic } from "./skillsSectionLogic.js";
 
-function normalizeIndex(v) {
-  if (v === "" || v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function normalizeTargets(indices, { skillRows, rowLabel }) {
-  const set = new Set();
-  for (const x of indices) {
-    const n = normalizeIndex(x);
-    if (n == null) continue;
-    if (!skillRows?.[n]) continue;
-    const label = rowLabel(skillRows[n]);
-    if (!label || label === "—") continue;
-    set.add(n);
-    if (set.size >= 2) break;
-  }
-  return Array.from(set);
-}
-
-function skillKeyOfRow(row) {
-  if (!row) return "";
-  if (row.kind === "master") {
-    const id = row.id ?? null;
-    return id == null ? "" : `m:${String(id)}`;
-  }
-  // custom は今後扱わない（過去データが残っていても重複判定から除外）
-  return "";
-}
-
-export function SkillsSection({ model }) {
-  const {
-    editable,
-    isCreate,
-    masterSkills,
-    skillRows,
-    rowLabel,
-    intBonusTargets,
-    dexBonusTargets,
-    intBonusValue,
-    dexBonusValue,
-    setField,
-    createUnlockTargets,
-    addToInventory,
-    removeFromInventory,
-    s,
-  } = model;
-
-  const freeItemPicks = s.skills?.freeItemPicks ?? {};
-  const freeItemClaims = s.skills?.freeItemClaims ?? {};
-
-  // draft（未確定）と confirmed（確定済み）の二段階にする
-  const bonusDraft = s.skills?.bonusDraft ?? { int: [], dex: [] };
-  const bonusConfirmed = !!s.skills?.bonusConfirmed;
-
-  const canUseIntBonus = safeNum(intBonusValue, 0) > 0;
-  const canUseDexBonus = safeNum(dexBonusValue, 0) > 0;
-
-  // -----------------------------
-  // create初期化は “入った最初の1回だけ”
-  // setField が毎回新しくてもリセットされないようにする
-  // -----------------------------
-  const didInitCreateRef = useRef(false);
-
-  useEffect(() => {
-    if (!isCreate) {
-      didInitCreateRef.current = false;
-      return;
-    }
-    if (didInitCreateRef.current) return;
-    didInitCreateRef.current = true;
-
-    // rows: 8固定 & baseLevel補完（必要な場合だけ更新）
-    setField(["skills", "rows"], (rowsPrev) => {
-      const rows0 = Array.isArray(rowsPrev) ? rowsPrev : [];
-      let rows = rows0.map((r) => {
-        const base = Number(r?.baseLevel);
-        const baseLevel = Number.isFinite(base)
-          ? base
-          : CREATE_BASE_LEVELS.includes(Number(r?.level))
-          ? Number(r?.level)
-          : 10;
-        // level は触らない（確定反映で変える）
-        return { ...(r ?? {}), baseLevel };
-      });
-
-      if (rows.length < CREATE_SKILL_COUNT) {
-        const addN = CREATE_SKILL_COUNT - rows.length;
-        rows = [
-          ...rows,
-          ...Array.from({ length: addN }, () => ({
-            kind: "master",
-            id: null,
-            level: 10,
-            baseLevel: 10,
-          })),
-        ];
-      } else if (rows.length > CREATE_SKILL_COUNT) {
-        rows = rows.slice(0, CREATE_SKILL_COUNT);
-      }
-
-      // “変化がないなら” そのまま返して余計な再レンダーを防ぐ
-      const same =
-        rows0.length === rows.length &&
-        rows0.every((r, i) => {
-          const a = r ?? {};
-          const b = rows[i] ?? {};
-          return (
-            a.kind === b.kind &&
-            (a.id ?? null) === (b.id ?? null) &&
-            Number(a.level ?? 0) === Number(b.level ?? 0) &&
-            Number(a.baseLevel ?? 0) === Number(b.baseLevel ?? 0)
-          );
-        });
-
-      return same ? rowsPrev : rows;
-    });
-
-    // draft の初期形（無ければ作る。既にあるなら触らない）
-    setField(["skills", "bonusDraft"], (prev) => {
-      if (prev && typeof prev === "object" && (Array.isArray(prev.int) || Array.isArray(prev.dex))) return prev;
-      return { int: [], dex: [] };
-    });
-  }, [isCreate, setField]);
-
-  // -----------------------------
-  // 表示用：create時は8行に固定して扱う
-  // -----------------------------
-  const displayRows = useMemo(() => {
-    const rows = Array.isArray(skillRows) ? skillRows : [];
-    if (!isCreate) return rows;
-    return rows.slice(0, CREATE_SKILL_COUNT);
-  }, [skillRows, isCreate]);
-
-  // -----------------------------
-  // 「すでに選ばれているスキル」を集計（重複禁止用）
-  // - master: id 重複禁止
-  // -----------------------------
-  const takenSkillKeys = useMemo(() => {
-    const set = new Set();
-    for (const r of displayRows) {
-      const key = skillKeyOfRow(r);
-      if (key) set.add(key);
-    }
-    return set;
-  }, [displayRows]);
-
-  // -----------------------------
-  // create: baseLevel 合計（= ボーナス除外）を計算
-  // -----------------------------
-  const baseSum = useMemo(() => {
-    if (!isCreate) return 0;
-    return displayRows.reduce((acc, r) => acc + safeNum(r?.baseLevel, 0), 0);
-  }, [displayRows, isCreate]);
-
-  const baseSumOk = !isCreate || baseSum <= CREATE_BASE_SUM_LIMIT;
-
-  // -----------------------------
-  // non-create 用：更新
-  // -----------------------------
-  function updateSkillRow(index, patch) {
-    setField(["skills", "rows"], (rowsPrev) => {
-      const rows = Array.isArray(rowsPrev) ? rowsPrev : [];
-      return rows.map((r, i) => (i === index ? { ...(r ?? {}), ...patch } : r));
-    });
-  }
-
-  function addMasterSkillRow() {
-    if (isCreate) return;
-    setField(["skills", "rows"], (rowsPrev) => {
-      const rows = Array.isArray(rowsPrev) ? rowsPrev : [];
-      return [...rows, { kind: "master", id: null, level: 10 }];
-    });
-  }
-
-  function removeSkillRow(index) {
-    if (isCreate) return;
-    setField(["skills", "rows"], (rowsPrev) => {
-      const rows = Array.isArray(rowsPrev) ? rowsPrev : [];
-      return rows.filter((_, i) => i !== index);
-    });
-    setField(["skills", "intBonusTargets"], (prev) => (Array.isArray(prev) ? prev.filter((x) => x !== index) : []));
-    setField(["skills", "dexBonusTargets"], (prev) => (Array.isArray(prev) ? prev.filter((x) => x !== index) : []));
-  }
-
-  // -----------------------------
-  // create：ベースLv変更（80制限を満たす選択肢だけ許可）
-  // - 確定済みなら level も再計算
-  // -----------------------------
-  function setBaseLevelAt(index, nextBaseLevel) {
-    setField(["skills"], (prevSkills) => {
-      const p = prevSkills ?? {};
-      const rowsPrev = Array.isArray(p.rows) ? p.rows : [];
-
-      // 8行前提で合計評価（不足がある場合にも耐える）
-      const baseSumNow = rowsPrev.slice(0, CREATE_SKILL_COUNT).reduce((acc, r, i) => {
-        const base = Number.isFinite(Number(r?.baseLevel))
-          ? Number(r.baseLevel)
-          : CREATE_BASE_LEVELS.includes(Number(r?.level))
-          ? Number(r.level)
-          : 10;
-        return acc + (i === index ? safeNum(nextBaseLevel, 0) : safeNum(base, 0));
-      }, 0);
-
-      if (baseSumNow > CREATE_BASE_SUM_LIMIT) {
-        // 80超は変更しない（UI側でも disabled するが保険）
-        return p;
-      }
-
-      const rows = rowsPrev.map((r, i) => {
-        if (i !== index) return r;
-
-        const base = nextBaseLevel;
-
-        // 確定済みなら「確定targets」で再計算
-        if (!isCreate || !p.bonusConfirmed) return { ...(r ?? {}), baseLevel: base };
-
-        const intSet = new Set((p.intBonusTargets ?? []).map(Number));
-        const dexSet = new Set((p.dexBonusTargets ?? []).map(Number));
-        const addInt = safeNum(intBonusValue, 0);
-        const addDex = safeNum(dexBonusValue, 0);
-
-        let lv = base;
-        if (intSet.has(i) && addInt > 0) lv += addInt;
-        if (dexSet.has(i) && addDex > 0) lv += addDex;
-
-        return { ...(r ?? {}), baseLevel: base, level: lv };
-      });
-
-      return { ...p, rows };
-    });
-  }
-
-  // -----------------------------
-  // “選べる” のはラベル確定済み行だけ（ボーナス選択用）
-  // -----------------------------
-  const selectableSkillRows = useMemo(() => {
-    const rows = Array.isArray(skillRows) ? skillRows : [];
-    const out = [];
-    for (let i = 0; i < rows.length; i++) {
-      const label = rowLabel(rows[i]);
-      if (!label || label === "—") continue;
-      out.push({ index: i, label });
-    }
-    return out;
-  }, [skillRows, rowLabel]);
-
-  // -----------------------------
-  // draft 更新（即時に level を触らない）
-  // -----------------------------
-  function setDraftTargets(type, indices) {
-    const next = normalizeTargets(indices, { skillRows, rowLabel });
-    setField(["skills", "bonusDraft"], (prev) => {
-      const p = prev && typeof prev === "object" ? { ...prev } : { int: [], dex: [] };
-      p[type] = next;
-      return p;
-    });
-  }
-
-  // -----------------------------
-  // 確定：draft → confirmed として rows.level を一括反映
-  // -----------------------------
-  function confirmBonus() {
-    if (!isCreate) return;
-    if (!baseSumOk) return;
-
-    setField(["skills"], (prevSkills) => {
-      const p = prevSkills ?? {};
-      const rowsPrev = Array.isArray(p.rows) ? p.rows : [];
-
-      const draftInt0 = Array.isArray(p.bonusDraft?.int) ? p.bonusDraft.int : [];
-      const draftDex0 = Array.isArray(p.bonusDraft?.dex) ? p.bonusDraft.dex : [];
-
-      const intSet = new Set(draftInt0.map(Number));
-      const dexSet = new Set(draftDex0.map(Number));
-
-      const addInt = safeNum(intBonusValue, 0);
-      const addDex = safeNum(dexBonusValue, 0);
-
-      const rows = rowsPrev.map((r, i) => {
-        const base = Number.isFinite(Number(r?.baseLevel))
-          ? Number(r.baseLevel)
-          : CREATE_BASE_LEVELS.includes(Number(r?.level))
-          ? Number(r.level)
-          : 10;
-
-        let lv = base;
-        if (intSet.has(i) && addInt > 0) lv += addInt;
-        if (dexSet.has(i) && addDex > 0) lv += addDex;
-
-        return { ...(r ?? {}), baseLevel: base, level: lv };
-      });
-
-      return {
-        ...p,
-        rows,
-        intBonusTargets: Array.from(intSet),
-        dexBonusTargets: Array.from(dexSet),
-        bonusConfirmed: true,
-      };
-    });
-  }
-
-  // -----------------------------
-  // 変更：確定解除。rows.level を base に戻す
-  // -----------------------------
-  function editBonus() {
-    if (!isCreate) return;
-
-    setField(["skills"], (prevSkills) => {
-      const p = prevSkills ?? {};
-      const rowsPrev = Array.isArray(p.rows) ? p.rows : [];
-
-      const rows = rowsPrev.map((r) => {
-        const base = Number.isFinite(Number(r?.baseLevel))
-          ? Number(r.baseLevel)
-          : CREATE_BASE_LEVELS.includes(Number(r?.level))
-          ? Number(r.level)
-          : 10;
-        return { ...(r ?? {}), baseLevel: base, level: base };
-      });
-
-      return {
-        ...p,
-        rows,
-        bonusConfirmed: false,
-        intBonusTargets: [],
-        dexBonusTargets: [],
-      };
-    });
-  }
-
-  // -----------------------------
-  // 「スキルを選び直したら戻す」
-  // - 確定済みの場合：その行が確定targetsに含まれていたら、確定解除＆Lvをbaseへ戻す＆draftも対象から外す
-  // -----------------------------
-  function cancelConfirmedIfRowAffected(index) {
-    if (!isCreate) return;
-    if (!bonusConfirmed) return;
-
-    setField(["skills"], (prevSkills) => {
-      const p = prevSkills ?? {};
-      const intT = Array.isArray(p.intBonusTargets) ? p.intBonusTargets : [];
-      const dexT = Array.isArray(p.dexBonusTargets) ? p.dexBonusTargets : [];
-      const hit = intT.includes(index) || dexT.includes(index);
-      if (!hit) return p;
-
-      const rowsPrev = Array.isArray(p.rows) ? p.rows : [];
-      const rows = rowsPrev.map((r, i) => {
-        if (i !== index) return r;
-        const base = Number.isFinite(Number(r?.baseLevel))
-          ? Number(r.baseLevel)
-          : CREATE_BASE_LEVELS.includes(Number(r?.level))
-          ? Number(r.level)
-          : 10;
-        return { ...(r ?? {}), baseLevel: base, level: base };
-      });
-
-      const d = p.bonusDraft && typeof p.bonusDraft === "object" ? p.bonusDraft : { int: [], dex: [] };
-      const nextDraft = {
-        int: (Array.isArray(d.int) ? d.int : []).filter((x) => Number(x) !== index),
-        dex: (Array.isArray(d.dex) ? d.dex : []).filter((x) => Number(x) !== index),
-      };
-
-      return {
-        ...p,
-        rows,
-        bonusConfirmed: false,
-        intBonusTargets: [],
-        dexBonusTargets: [],
-        bonusDraft: nextDraft,
-      };
-    });
-  }
-
-  function BonusPicker({ type, value, draftTargets }) {
-    const canUse = value > 0;
-    if (!isCreate) return null;
-    const locked = bonusConfirmed; // 確定後はロック
-
-    if (!canUse) {
-      return (
-        <div style={{ fontSize: 12, opacity: 0.7 }}>
-          {type === "int" ? "知力" : "器用さ"}修正が＋ではないため、ボーナスはありません。
-        </div>
-      );
-    }
-
-    const t0 = draftTargets?.[0] ?? "";
-    const t1 = draftTargets?.[1] ?? "";
-
-    function setAt(pos, v) {
-      if (locked) return;
-      const next = [t0, t1];
-      next[pos] = v === "" ? "" : Number(v);
-
-      const a0 = next[0] === "" ? "" : Number(next[0]);
-      const a1 = next[1] === "" ? "" : Number(next[1]);
-
-      const uniq = [];
-      if (a0 !== "") uniq.push(a0);
-      if (a1 !== "" && a1 !== a0) uniq.push(a1);
-
-      setDraftTargets(type, uniq);
-    }
-
+function BonusPicker({ type, value, draftTargets, locked, selectableSkillRows, setDraftTargets }) {
+  const canUse = value > 0;
+  if (!canUse) {
     return (
-      <div style={{ display: "grid", gap: 8 }}>
-        <div style={{ fontSize: 12, opacity: 0.9 }}>
-          <b>{type === "int" ? "知力" : "器用さ"}</b>ボーナス：選んだスキル（最大2つ）に <b>+{value}</b>
-          <span style={{ marginLeft: 8, opacity: 0.75 }}>（確定ボタンで反映）</span>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <select
-            className="sheet-input"
-            value={t0 === "" ? "" : String(t0)}
-            onChange={(e) => setAt(0, e.target.value)}
-            disabled={locked}
-            title={locked ? "確定済みです（変更をクリックすると選び直せます）" : ""}
-          >
-            <option value="">（未選択）</option>
-            {selectableSkillRows.map((r) => (
-              <option key={`b0-${r.index}`} value={String(r.index)}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className="sheet-input"
-            value={t1 === "" ? "" : String(t1)}
-            onChange={(e) => setAt(1, e.target.value)}
-            disabled={locked}
-            title={locked ? "確定済みです（変更をクリックすると選び直せます）" : ""}
-          >
-            <option value="">（未選択）</option>
-            {selectableSkillRows.map((r) => (
-              <option key={`b1-${r.index}`} value={String(r.index)}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.6 }}>
-          ※ 先にスキル欄でスキル名を選択してください。<br />
-          ※ 同じスキルは2回選べません。
-        </div>
+      <div style={{ fontSize: 12, opacity: 0.7 }}>
+        {type === "int" ? "知力" : "器用さ"}修正が＋ではないため、ボーナスはありません。
       </div>
     );
   }
 
-  // -----------------------------
-  // フリーアイテム獲得：取り消し可能にする
-  // -----------------------------
-  function setFreePick(skillName, catalogKey) {
-    setField(["skills", "freeItemPicks"], (prev) => {
-      const obj = prev && typeof prev === "object" ? { ...prev } : {};
-      obj[skillName] = catalogKey;
-      return obj;
-    });
+  const t0 = draftTargets?.[0] ?? "";
+  const t1 = draftTargets?.[1] ?? "";
+
+  function setAt(pos, v) {
+    if (locked) return;
+
+    const next = [t0, t1];
+    next[pos] = v === "" ? "" : Number(v);
+
+    const a0 = next[0] === "" ? "" : Number(next[0]);
+    const a1 = next[1] === "" ? "" : Number(next[1]);
+
+    const uniq = [];
+    if (a0 !== "") uniq.push(a0);
+    if (a1 !== "" && a1 !== a0) uniq.push(a1);
+
+    setDraftTargets(type, uniq);
   }
 
-  function markClaimed(skillName, catalogKey) {
-    setField(["skills", "freeItemClaims"], (prev) => {
-      const obj = prev && typeof prev === "object" ? { ...prev } : {};
-      obj[skillName] = catalogKey;
-      return obj;
-    });
-  }
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      <div style={{ fontSize: 12, opacity: 0.9 }}>
+        <b>{type === "int" ? "知力" : "器用さ"}</b>ボーナス：選んだスキル（最大2つ）に <b>+{value}</b>
+        <span style={{ marginLeft: 8, opacity: 0.75 }}>（確定ボタンで反映）</span>
+      </div>
 
-  function unmarkClaimed(skillName) {
-    setField(["skills", "freeItemClaims"], (prev) => {
-      const obj = prev && typeof prev === "object" ? { ...prev } : {};
-      if (Object.prototype.hasOwnProperty.call(obj, skillName)) delete obj[skillName];
-      return obj;
-    });
-  }
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <select
+          className="sheet-input"
+          value={t0 === "" ? "" : String(t0)}
+          onChange={(e) => setAt(0, e.target.value)}
+          disabled={locked}
+          title={locked ? "確定済みです（変更をクリックすると選び直せます）" : ""}
+        >
+          <option value="">（未選択）</option>
+          {selectableSkillRows.map((r) => (
+            <option key={`b0-${r.index}`} value={String(r.index)}>
+              {r.label}
+            </option>
+          ))}
+        </select>
 
-  function claimFreeItem(skillName) {
-    const sn = String(skillName ?? "").trim();
-    if (!sn) return;
+        <select
+          className="sheet-input"
+          value={t1 === "" ? "" : String(t1)}
+          onChange={(e) => setAt(1, e.target.value)}
+          disabled={locked}
+          title={locked ? "確定済みです（変更をクリックすると選び直せます）" : ""}
+        >
+          <option value="">（未選択）</option>
+          {selectableSkillRows.map((r) => (
+            <option key={`b1-${r.index}`} value={String(r.index)}>
+              {r.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
-    const claimedKey = freeItemClaims?.[sn];
-    if (claimedKey) return;
+      <div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.6 }}>
+        ※ 先にスキル欄でスキル名を選択してください。<br />
+        ※ 同じスキルは2回選べません。
+      </div>
+    </div>
+  );
+}
 
-    const key = freeItemPicks?.[sn];
-    if (!key) return;
+export function SkillsSection({ model }) {
+  const L = useSkillsSectionLogic(model);
 
-    const [kind, idStr] = String(key).split(":");
-    const id = Number(idStr);
-    if (!kind || !Number.isFinite(id)) return;
+  const {
+    // model passthrough
+    editable,
+    isCreate,
+    masterSkills,
+    rowLabel,
 
-    addToInventory(kind, id, 1);
-    markClaimed(sn, key);
-  }
+    // derived
+    displayRows,
+    takenSkillKeys,
+    baseSum,
+    baseSumOk,
 
-  function cancelClaimFreeItem(skillName) {
-    const sn = String(skillName ?? "").trim();
-    if (!sn) return;
+    // create constants
+    CREATE_SKILL_COUNT,
+    CREATE_BASE_LEVELS,
+    CREATE_BASE_SUM_LIMIT,
 
-    const claimedKey = freeItemClaims?.[sn];
-    if (!claimedKey) return;
+    // handlers
+    updateSkillRow,
+    addMasterSkillRow,
+    removeSkillRow,
+    setBaseLevelAt,
+    cancelConfirmedIfRowAffected,
 
-    const [kind, idStr] = String(claimedKey).split(":");
-    const id = Number(idStr);
-    if (!kind || !Number.isFinite(id)) return;
+    // bonus
+    bonusConfirmed,
+    selectableSkillRows,
+    draftInt,
+    draftDex,
+    canUseIntBonus,
+    canUseDexBonus,
+    canConfirm,
+    setDraftTargets,
+    confirmBonus,
+    editBonus,
 
-    removeFromInventory(kind, id);
-    unmarkClaimed(sn);
-  }
+    // free item
+    createUnlockTargets,
+    freeItemPicks,
+    freeItemClaims,
+    setFreePick,
+    claimFreeItem,
+    cancelClaimFreeItem,
+  } = L;
 
-  const draftInt = Array.isArray(bonusDraft?.int) ? bonusDraft.int : [];
-  const draftDex = Array.isArray(bonusDraft?.dex) ? bonusDraft.dex : [];
+  // registry.json 由来のカテゴリラベル（無ければ kind をそのまま）
+  const categoryLabel = (categoryKey) =>
+    String(model?.catalog?.categories?.[String(categoryKey ?? "")]?.label ?? categoryKey ?? "");
 
-  const canConfirm =
-    isCreate &&
-    baseSumOk &&
-    ((canUseIntBonus && draftInt.length > 0) || (canUseDexBonus && draftDex.length > 0));
+  const locked = bonusConfirmed;
 
   return (
     <section className="panel skills">
@@ -546,14 +153,14 @@ export function SkillsSection({ model }) {
 
       {isCreate && (
         <div style={{ marginBottom: 8, fontSize: 12, opacity: 0.85, lineHeight: 1.6 }}>
-          ※ createモードではスキル数は <b>8つ固定</b> です。<br />
-          ※ 基本Lvは <b>5 / 10 / 15 / 20</b> から選択できます。<br />
+          ※ createモードではスキル数は <b>{CREATE_SKILL_COUNT}つ固定</b> です。<br />
+          ※ 基本Lvは <b>{CREATE_BASE_LEVELS.join(" / ")}</b> から選択できます。<br />
           <span style={{ opacity: 0.9 }}>
             基本Lv合計（ボーナス除外）:{" "}
             <b style={{ color: baseSumOk ? "inherit" : "crimson" }}>
               {baseSum} / {CREATE_BASE_SUM_LIMIT}
             </b>
-            {!baseSumOk && <span style={{ marginLeft: 6, color: "crimson" }}>（80を超えています）</span>}
+            {!baseSumOk && <span style={{ marginLeft: 6, color: "crimson" }}>（{CREATE_BASE_SUM_LIMIT}を超えています）</span>}
           </span>
         </div>
       )}
@@ -580,7 +187,8 @@ export function SkillsSection({ model }) {
               const label = rowLabel(row);
               const lv = safeNum(row?.level, 0);
 
-              const selfKey = skillKeyOfRow(row);
+              const selfId = row?.id ?? null;
+              const selfKey = selfId == null ? "" : `m:${String(selfId)}`;
 
               return (
                 <tr key={i}>
@@ -596,6 +204,7 @@ export function SkillsSection({ model }) {
 
                           const nextId = v === "" ? null : Number(v);
                           const nextKey = nextId == null ? "" : `m:${String(nextId)}`;
+
                           if (nextKey && takenSkillKeys.has(nextKey) && nextKey !== selfKey) return;
 
                           if (isCreate) cancelConfirmedIfRowAffected(i);
@@ -652,7 +261,7 @@ export function SkillsSection({ model }) {
                         min={0}
                         max={99}
                         className="num"
-                        onCommit={(v) => setField(["skills", "rows", i, "level"], v)}
+                        onCommit={(v) => model.setField(["skills", "rows", i, "level"], v)}
                       />
                     )}
                   </td>
@@ -690,8 +299,22 @@ export function SkillsSection({ model }) {
           </div>
 
           <div style={{ display: "grid", gap: 12 }}>
-            <BonusPicker type="int" value={safeNum(intBonusValue, 0)} draftTargets={draftInt} />
-            <BonusPicker type="dex" value={safeNum(dexBonusValue, 0)} draftTargets={draftDex} />
+            <BonusPicker
+              type="int"
+              value={safeNum(model.intBonusValue, 0)}
+              draftTargets={draftInt}
+              locked={locked}
+              selectableSkillRows={selectableSkillRows}
+              setDraftTargets={setDraftTargets}
+            />
+            <BonusPicker
+              type="dex"
+              value={safeNum(model.dexBonusValue, 0)}
+              draftTargets={draftDex}
+              locked={locked}
+              selectableSkillRows={selectableSkillRows}
+              setDraftTargets={setDraftTargets}
+            />
           </div>
 
           <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
@@ -704,7 +327,7 @@ export function SkillsSection({ model }) {
                 bonusConfirmed
                   ? "既に確定済みです（変更したい場合は「変更」）"
                   : !baseSumOk
-                  ? "基本Lv合計（ボーナス除外）が80以下になるように調整してください"
+                  ? `基本Lv合計（ボーナス除外）が${CREATE_BASE_SUM_LIMIT}以下になるように調整してください`
                   : !((canUseIntBonus && draftInt.length > 0) || (canUseDexBonus && draftDex.length > 0))
                   ? "対象を選択してください"
                   : ""
@@ -769,11 +392,22 @@ export function SkillsSection({ model }) {
                     <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, marginTop: 8, alignItems: "center" }}>
                       <select className="sheet-input" value={picked} onChange={(e) => setFreePick(label, e.target.value)}>
                         <option value="">（選択）</option>
-                        {options.map(({ threshold, r }) => (
-                          <option key={`${label}-${catalogKeyOf(r.kind, r.id)}-${threshold}`} value={catalogKeyOf(r.kind, r.id)}>
-                            {`[${threshold}] ${kindLabel(r.kind)}: ${r.name}`}
-                          </option>
-                        ))}
+                        {options.map(({ threshold, r }) => {
+                          // unlock の reward は { kind, id, name } 前提（name が無ければ表示をフォールバック）
+                          const kind = r?.kind;
+                          const id = r?.id;
+                          const key = encodeCatalogKey(kind, id);
+                          if (!key) return null;
+
+                          const cat = categoryLabel(kind);
+                          const nm = String(r?.name ?? "(unknown)");
+
+                          return (
+                            <option key={`${label}-${key}-${threshold}`} value={key}>
+                              {`[${threshold}] ${cat}: ${nm}`}
+                            </option>
+                          );
+                        })}
                       </select>
 
                       <button
@@ -788,9 +422,7 @@ export function SkillsSection({ model }) {
                     </div>
 
                     {claimed ? (
-                      <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>
-                        ※「獲得済み」を押すと取り消して、無料獲得を選び直せます
-                      </div>
+                      <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>※「獲得済み」を押すと取り消して、無料獲得を選び直せます</div>
                     ) : (
                       <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8 }}>※ このスキルでの無料獲得は 1つだけ選択してください</div>
                     )}

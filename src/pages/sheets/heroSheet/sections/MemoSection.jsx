@@ -1,6 +1,6 @@
 // src/pages/sheets/heroSheet/sections/MemoSection.jsx
 import React from "react";
-import { TextCell } from "../../components/TextCell.jsx";
+import { TextCell } from "/src/pages/sheets/components/TextCell.jsx";
 
 export function MemoSection({ model }) {
   const { s, editable, setField } = model;

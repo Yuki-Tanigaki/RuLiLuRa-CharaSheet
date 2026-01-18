@@ -6,7 +6,7 @@ import {
   deleteHistory,
   clearHistory,
   updateHistoryItem,
-} from "../../../../lib/versioning.js";
+} from "/src/lib/versioning.js";
 
 function fmtAt(iso) {
   try {

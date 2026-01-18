@@ -1,6 +1,6 @@
-// src/pages/sheets/heroSheet/components/TextCell.jsx
+// src/pages/sheets/components/TextCell.jsx
 import React, { useEffect, useState } from "react";
-import { joinClass } from "../common/utils/format.js";
+import { joinClass } from "/src/common/utils/format.js";
 
 export function TextCell({
   editable,

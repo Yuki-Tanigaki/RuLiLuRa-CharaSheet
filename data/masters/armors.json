@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "name": "部分ヨロイ",
+    "price": 5000,
+    "fp": null,
+    "tl": 1,
+    "evadeMod": 0,
+    "armorBonus": 2,
+    "memo": ""
+  },
+  {
+    "id": 2,
+    "name": "皮ヨロイ",
+    "price": 10000,
+    "fp": null,
+    "tl": 1,
+    "evadeMod": 0,
+    "armorBonus": 3,
+    "memo": ""
+  },
+  {
+    "id": 3,
+    "name": "鎖かたびら",
+    "price": 30000,
+    "fp": null,
+    "tl": 1,
+    "evadeMod": -10,
+    "armorBonus": 4,
+    "memo": ""
+  },
+  {
+    "id": 4,
+    "name": "板金ヨロイ",
+    "price": 100000,
+    "fp": null,
+    "tl": 1,
+    "evadeMod": -20,
+    "armorBonus": 6,
+    "memo": ""
+  },
+  {
+    "id": 5,
+    "name": "甲冑（かっちゅう）",
+    "price": 200000,
+    "fp": 10,
+    "tl": 1,
+    "evadeMod": -30,
+    "armorBonus": 8,
+    "memo": ""
+  }
+]

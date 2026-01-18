@@ -1,6 +1,6 @@
 // src/pages/sheets/heroSheet/sections/HeroSkillsSection.jsx
 import React, { useMemo } from "react";
-import { TextCell } from "../../components/TextCell.jsx";
+import { TextCell } from "/src/pages/sheets/components/TextCell.jsx";
 
 function heroSkillKeyOfRow(row) {
   if (!row) return "";
