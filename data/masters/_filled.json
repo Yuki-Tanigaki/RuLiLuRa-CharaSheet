@@ -17,8 +17,8 @@
     "damage": "1D10 + 2",
     "requirementSkills": {},
     "weight": 1,
-    "class": ["S"],
-    "memo": "投げた場合の射程は1"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 2,
@@ -36,7 +36,7 @@
     "damage": "1D10 + 1",
     "requirementSkills": {},
     "weight": 0,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -57,7 +57,7 @@
     "damage": "1D10 × 2",
     "requirementSkills": {},
     "weight": 2,
-    "class": ["H"],
+    "type": "",
     "memo": ""
   },
   {
@@ -76,9 +76,9 @@
     "baseAccuracy": 15,
     "skill": "接近戦",
     "damage": "2D10 + 3",
-    "requirementSkills": {"歌術知識": 5},
+    "requirementSkills": {},
     "weight": 5,
-    "class": ["G"],
+    "type": "",
     "memo": ""
   },
   {
@@ -100,8 +100,8 @@
     "damage": "3D10",
     "requirementSkills": {},
     "weight": 4,
-    "class": ["専用"],
-    "memo": "不可逆な装備（換装不可）。攻撃対象は回避チェックに失敗すると、武器に拘束される。攻撃側が拘束を解くか、命中を受けた部位が破壊されるまで毎ターンダメージを受け続ける。 拘束中は攻撃側は他の行動を行えない"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 6,
@@ -121,7 +121,7 @@
     "damage": "2D10 + 2",
     "requirementSkills": {},
     "weight": 2,
-    "class": ["S"],
+    "type": "",
     "memo": ""
   },
   {
@@ -142,7 +142,7 @@
     "damage": "1D10 + 3",
     "requirementSkills": {},
     "weight": 2,
-    "class": ["C", "S"],
+    "type": "",
     "memo": ""
   },
   {
@@ -163,8 +163,8 @@
     "damage": "2D10 + 1",
     "requirementSkills": {},
     "weight": 2,
-    "class": ["S"],
-    "memo": "投げた場合の射程は1"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 9,
@@ -184,7 +184,7 @@
     "damage": "2D10 + 4",
     "requirementSkills": {},
     "weight": 3,
-    "class": ["S"],
+    "type": "",
     "memo": ""
   },
   {
@@ -205,7 +205,7 @@
     "damage": "2D10 + 6",
     "requirementSkills": {},
     "weight": 4,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -226,8 +226,8 @@
     "damage": "1D10 × 2 + 4",
     "requirementSkills": {},
     "weight": 4,
-    "class": [],
-    "memo": "両手で扱うことが可能。両手持ちした場合はダメージに＋４する"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 12,
@@ -247,7 +247,7 @@
     "damage": "3D10 + 5",
     "requirementSkills": {},
     "weight": 6,
-    "class": ["G"],
+    "type": "",
     "memo": ""
   },
   {
@@ -268,8 +268,8 @@
     "damage": "2D10 × 2 - 5",
     "requirementSkills": {},
     "weight": 3,
-    "class": ["S"],
-    "memo": "投げた場合の射程は1"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 14,
@@ -289,7 +289,7 @@
     "damage": "3D10 × 2 - 10",
     "requirementSkills": {},
     "weight": 5,
-    "class": ["G"],
+    "type": "",
     "memo": ""
   },
   {
@@ -310,8 +310,8 @@
     "damage": "2D10 × 2 + 3",
     "requirementSkills": {},
     "weight": 6,
-    "class": ["G", "L"],
-    "memo": "「槍/棒術」で攻撃スキルを代用しても良い"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 16,
@@ -331,7 +331,7 @@
     "damage": "1D10 × 3",
     "requirementSkills": {},
     "weight": 4,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -352,7 +352,7 @@
     "damage": "1D10 × 5",
     "requirementSkills": {},
     "weight": 7,
-    "class": ["G"],
+    "type": "",
     "memo": ""
   },
   {
@@ -373,7 +373,7 @@
     "damage": "2D10 - 1",
     "requirementSkills": {},
     "weight": 2,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -394,7 +394,7 @@
     "damage": "3D10",
     "requirementSkills": {},
     "weight": 4,
-    "class": ["L"],
+    "type": "",
     "memo": ""
   },
   {
@@ -415,7 +415,7 @@
     "damage": "3D10 - 3",
     "requirementSkills": {},
     "weight": 2,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -436,7 +436,7 @@
     "damage": "4D10 - 3",
     "requirementSkills": {},
     "weight": 3,
-    "class": ["L"],
+    "type": "",
     "memo": ""
   },
   {
@@ -457,8 +457,8 @@
     "damage": "3D10 - 4",
     "requirementSkills": {},
     "weight": 1,
-    "class": [],
-    "memo": "投げた場合の射程は1"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 23,
@@ -478,7 +478,7 @@
     "damage": "3D10",
     "requirementSkills": {},
     "weight": 3,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -499,7 +499,7 @@
     "damage": "1D10 × 2 + 2D10",
     "requirementSkills": {},
     "weight": 5,
-    "class": ["L"],
+    "type": "",
     "memo": ""
   },
   {
@@ -520,7 +520,7 @@
     "damage": "1D10 × 4",
     "requirementSkills": {},
     "weight": 7,
-    "class": ["G", "L"],
+    "type": "",
     "memo": ""
   },
   {
@@ -539,10 +539,10 @@
     "baseAccuracy": 25,
     "skill": "槍/棒術",
     "damage": "2D10 + 2",
-    "requirementSkills": {"歌術知識": 20},
+    "requirementSkills": {},
     "weight": 5,
-    "class": ["L"],
-    "memo": "【魔導奏甲】による歌術において、敵の抵抗修正を−10してよい"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 27,
@@ -562,8 +562,8 @@
     "damage": "2D10*",
     "requirementSkills": {},
     "weight": 2,
-    "class": ["C"],
-    "memo": "白兵武器ではないが、ダメージに機体のダメージ修正を加えてよい"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 28,
@@ -583,7 +583,7 @@
     "damage": "3D10",
     "requirementSkills": {},
     "weight": 3,
-    "class": ["G"],
+    "type": "",
     "memo": ""
   },
   {
@@ -604,7 +604,7 @@
     "damage": "3D10",
     "requirementSkills": {},
     "weight": 5,
-    "class": ["C"],
+    "type": "",
     "memo": ""
   },
   {
@@ -625,7 +625,7 @@
     "damage": "2D10",
     "requirementSkills": {},
     "weight": 2,
-    "class": ["C"],
+    "type": "",
     "memo": ""
   },
   {
@@ -644,9 +644,9 @@
     "baseAccuracy": 30,
     "skill": "拳銃射撃",
     "damage": "1D10 + 4",
-    "requirementSkills": {"現世武器知識": 5},
+    "requirementSkills": {},
     "weight": 1,
-    "class": ["S"],
+    "type": "",
     "memo": ""
   },
   {
@@ -665,9 +665,9 @@
     "baseAccuracy": 25,
     "skill": "拳銃射撃",
     "damage": "1D10 + 6",
-    "requirementSkills": {"現世武器知識": 15},
+    "requirementSkills": {},
     "weight": 3,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -686,9 +686,9 @@
     "baseAccuracy": 30,
     "skill": "ライフル射撃",
     "damage": "3D10",
-    "requirementSkills": {"現世武器知識": 5},
+    "requirementSkills": {},
     "weight": 5,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -707,9 +707,9 @@
     "baseAccuracy": 40,
     "skill": "ライフル射撃",
     "damage": "3D10 + 2",
-    "requirementSkills": {"現世武器知識": 5},
+    "requirementSkills": {},
     "weight": 4,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -728,9 +728,9 @@
     "baseAccuracy": 45,
     "skill": "ライフル射撃",
     "damage": "1D10 × 4",
-    "requirementSkills": {"現世武器知識": 10},
+    "requirementSkills": {},
     "weight": 5,
-    "class": ["A", "L"],
+    "type": "",
     "memo": ""
   },
   {
@@ -749,9 +749,9 @@
     "baseAccuracy": 30,
     "skill": "自動小銃射撃",
     "damage": "2D10",
-    "requirementSkills": {"現世武器知識": 10},
+    "requirementSkills": {},
     "weight": 3,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -770,9 +770,9 @@
     "baseAccuracy": 35,
     "skill": "自動小銃射撃",
     "damage": "2D10 + 1",
-    "requirementSkills": {"現世武器知識": 10},
+    "requirementSkills": {},
     "weight": 3,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -791,9 +791,9 @@
     "baseAccuracy": 25,
     "skill": "自動小銃射撃",
     "damage": "2D10 + 3",
-    "requirementSkills": {"現世武器知識": 15},
+    "requirementSkills": {},
     "weight": 8,
-    "class": ["L", "M"],
+    "type": "",
     "memo": ""
   },
   {
@@ -812,9 +812,9 @@
     "baseAccuracy": 15,
     "skill": "自動小銃射撃",
     "damage": "3D10",
-    "requirementSkills": {"現世武器知識": 20},
+    "requirementSkills": {},
     "weight": 6,
-    "class": ["G", "M"],
+    "type": "",
     "memo": ""
   },
   {
@@ -833,9 +833,9 @@
     "baseAccuracy": 20,
     "skill": "自動小銃射撃",
     "damage": "2D10 - 1",
-    "requirementSkills": {"現世武器知識": 20},
+    "requirementSkills": {},
     "weight": 2,
-    "class": ["M"],
+    "type": "",
     "memo": ""
   },
   {
@@ -854,10 +854,10 @@
     "baseAccuracy": 15,
     "skill": "ロケット/ミサイル",
     "damage": "4D10 - 6",
-    "requirementSkills": {"現世武器知識": 10},
+    "requirementSkills": {},
     "weight": 2,
-    "class": ["M"],
-    "memo": "単発使い捨ての武器"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 42,
@@ -875,10 +875,10 @@
     "baseAccuracy": 15,
     "skill": "ロケット/ミサイル",
     "damage": "4D10 - 6",
-    "requirementSkills": {"現世武器知識": 15},
+    "requirementSkills": {},
     "weight": 5,
-    "class": ["G", "M"],
-    "memo": "再使用には弾を補充が必要。攻撃回数分の弾を、複数ターンに分けて射撃可能"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 43,
@@ -896,10 +896,10 @@
     "baseAccuracy": 20,
     "skill": "ロケット/ミサイル",
     "damage": "4D10 - 6",
-    "requirementSkills": {"現世武器知識": 20},
+    "requirementSkills": {},
     "weight": 8,
-    "class": ["A", "G"],
-    "memo": "再使用には弾を補充が必要。攻撃回数分の弾を、複数ターンに分けて射撃可能"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 44,
@@ -917,10 +917,10 @@
     "baseAccuracy": 15,
     "skill": "ロケット/ミサイル",
     "damage": "2D10",
-    "requirementSkills": {"現世武器知識": 15},
+    "requirementSkills": {},
     "weight": 4,
-    "class": ["A"],
-    "memo": "再使用には弾を補充が必要"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 45,
@@ -938,9 +938,9 @@
     "baseAccuracy": 25,
     "skill": "ロケット/ミサイル",
     "damage": "5D10",
-    "requirementSkills": {"現世武器知識": 15},
+    "requirementSkills": {},
     "weight": 4,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -959,10 +959,10 @@
     "baseAccuracy": 40,
     "skill": "ロケット/ミサイル",
     "damage": "4D10",
-    "requirementSkills": {"現世武器知識": 20},
+    "requirementSkills": {},
     "weight": 3,
-    "class": ["A"],
-    "memo": "再使用には弾を補充が必要"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 47,
@@ -980,10 +980,10 @@
     "baseAccuracy": 35,
     "skill": "ロケット/ミサイル",
     "damage": "2D10 + 5",
-    "requirementSkills": {"現世武器知識": 20},
+    "requirementSkills": {},
     "weight": 8,
-    "class": ["A", "G"],
-    "memo": "再使用には弾を補充が必要。攻撃回数分の弾を、複数ターンに分けて射撃可能"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 48,
@@ -1001,9 +1001,9 @@
     "baseAccuracy": 25,
     "skill": "キャノン",
     "damage": "1D10 × 3",
-    "requirementSkills": {"歌術知識": 5},
+    "requirementSkills": {},
     "weight": 5,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -1022,10 +1022,10 @@
     "baseAccuracy": 30,
     "skill": "キャノン",
     "damage": "1D10 × 3",
-    "requirementSkills": {"歌術知識": 5},
+    "requirementSkills": {},
     "weight": 4,
-    "class": [],
-    "memo": "武装タイプが「M」の奏甲のみ肩装着が可能。肩装着時には、装填中でも行動可能"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 50,
@@ -1043,9 +1043,9 @@
     "baseAccuracy": 25,
     "skill": "キャノン",
     "damage": "5D10 - 2",
-    "requirementSkills": {"歌術知識": 20},
+    "requirementSkills": {},
     "weight": 5,
-    "class": ["G"],
+    "type": "",
     "memo": ""
   },
   {
@@ -1064,9 +1064,9 @@
     "baseAccuracy": 30,
     "skill": "キャノン",
     "damage": "5D10 + 4",
-    "requirementSkills": {"歌術知識": 15},
+    "requirementSkills": {},
     "weight": 5,
-    "class": ["専用"],
+    "type": "",
     "memo": ""
   },
   {
@@ -1085,9 +1085,9 @@
     "baseAccuracy": 25,
     "skill": "キャノン",
     "damage": "3D10 - 4",
-    "requirementSkills": {"歌術知識": 5},
+    "requirementSkills": {},
     "weight": 3,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -1106,9 +1106,9 @@
     "baseAccuracy": 30,
     "skill": "キャノン",
     "damage": "3D10 - 3",
-    "requirementSkills": {"現世武器知識": 15},
+    "requirementSkills": {},
     "weight": 4,
-    "class": [],
+    "type": "",
     "memo": ""
   },
   {
@@ -1127,9 +1127,9 @@
     "baseAccuracy": 25,
     "skill": "キャノン",
     "damage": "4D10 - 2",
-    "requirementSkills": {"現世武器知識": 15},
+    "requirementSkills": {},
     "weight": 6,
-    "class": ["M"],
+    "type": "",
     "memo": ""
   },
   {
@@ -1148,9 +1148,9 @@
     "baseAccuracy": 30,
     "skill": "キャノン",
     "damage": "4D10 + 1",
-    "requirementSkills": {"現世武器知識": 15},
+    "requirementSkills": {},
     "weight": 6,
-    "class": ["M"],
+    "type": "",
     "memo": ""
   },
   {
@@ -1169,9 +1169,9 @@
     "baseAccuracy": 25,
     "skill": "キャノン",
     "damage": "5D10",
-    "requirementSkills": {"現世武器知識": 15},
+    "requirementSkills": {},
     "weight": 7,
-    "class": ["専用"],
+    "type": "",
     "memo": ""
   },
   {
@@ -1190,10 +1190,10 @@
     "baseAccuracy": 20,
     "skill": "爆発物",
     "damage": "1D10 × 3",
-    "requirementSkills": {"現世武器知識": 5},
+    "requirementSkills": {},
     "weight": 2,
-    "class": [],
-    "memo": "3発使い捨ての武器。射撃武器であるが、命中の戦闘修正には白兵修正を用いる"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 58,
@@ -1211,10 +1211,10 @@
     "baseAccuracy": 10,
     "skill": "爆発物",
     "damage": "1D10 × 4",
-    "requirementSkills": {"現世武器知識": 5},
+    "requirementSkills": {},
     "weight": 3,
-    "class": [],
-    "memo": "3発使い捨ての武器"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 59,
@@ -1232,10 +1232,10 @@
     "baseAccuracy": 10,
     "skill": "爆発物",
     "damage": "1D10 × 5",
-    "requirementSkills": {"現世武器知識": 5},
+    "requirementSkills": {},
     "weight": 1,
-    "class": [],
-    "memo": "単発使い捨ての武器"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 60,
@@ -1255,8 +1255,8 @@
     "damage": "1D10 - 5",
     "requirementSkills": {},
     "weight": 1,
-    "class": ["C"],
-    "memo": "攻撃対象は回避チェックに失敗すると、武器に拘束される。攻撃側が拘束を解くか、命中を受けた部位が破壊されるまで毎ターンダメージを受け続ける。 拘束中は攻撃側は他の行動を行えない。"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 61,
@@ -1274,10 +1274,10 @@
     "baseAccuracy": 25,
     "skill": "特殊武器",
     "damage": "2D10",
-    "requirementSkills": {"歌術知識": 15},
+    "requirementSkills": {},
     "weight": 1,
-    "class": ["C"],
-    "memo": "防御値を無視できる。白兵武器だが、ダメージに機体のダメージ修正を加算しない"
+    "type": "",
+    "memo": ""
   },
   {
     "id": 62,
@@ -1295,30 +1295,9 @@
     "baseAccuracy": 25,
     "skill": "特殊武器",
     "damage": "1D10 × 3",
-    "requirementSkills": {"現世武器知識": 5},
-    "weight": 2,
-    "class": [],
-    "memo": "単発使い捨ての武器。奏甲扱いの目標には効果は無い。自分のいるグリッドもしくは、自分のいるヘックスと隣接ヘックスを目標にできる。目標にいるすべての敵・味方に命中判定を行う。命中値の算出や命中判定は個々に行うこと"
-  },
-  {
-    "id": 63,
-    "name": "シュツルムシールド",
-    "price": 350000,
-    "fp": 17,
-    "maintenance": 0,
-    "maintenanceFp": 0,
-    "tl": 2,
-    "slot":  {
-      "手か腕": 1
-    },
-    "range": "白",
-    "attacks": "1/T",
-    "baseAccuracy": 30,
-    "skill": "盾防御",
-    "damage": "1D10 + 5",
     "requirementSkills": {},
-    "weight": 3,
-    "class": ["専用"],
-    "memo": "防御値+2"
+    "weight": 2,
+    "type": "",
+    "memo": ""
   }
 ]

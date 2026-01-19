@@ -2,127 +2,169 @@
   {
     "id": 1,
     "name": "NRS",
-    "price": null,
-    "fp": null,
-    "maintenance": "",
-    "tl": 2,
-    "slot": "gear",
+    "price": 100000,
+    "fp": 5,
+    "maintenance": 0,
+    "maintenanceFp": 0,
+    "tl": 1,
+    "slot": {
+      "胴": 1
+    },
     "armorBonus": 0,
-    "requirementSkills": {},
+    "requirementSkills": {"歌術知識": 5},
     "weight": 1,
-    "type": "stealth",
-    "memo": ""
+    "class": [],
+    "memo": "奇声への抵抗に＋20"
   },
   {
     "id": 2,
     "name": "NRSⅡ",
-    "price": null,
-    "fp": null,
-    "maintenance": "",
-    "tl": 3,
-    "slot": "gear",
+    "price": 100000,
+    "fp": 5,
+    "maintenance": 0,
+    "maintenanceFp": 0,
+    "tl": 2,
+    "slot": {
+      "胴": 1
+    },
     "armorBonus": 0,
-    "requirementSkills": {},
+    "requirementSkills": {"歌術知識": 5},
     "weight": 1,
-    "type": "stealth",
-    "memo": ""
+    "class": [],
+    "memo": "奇声への抵抗に＋30"
   },
   {
     "id": 3,
     "name": "ドッペルゲンガー",
-    "price": null,
-    "fp": null,
-    "maintenance": "",
+    "price": 100000,
+    "fp": 5,
+    "maintenance": 0,
+    "maintenanceFp": 0,
     "tl": 3,
-    "slot": "gear",
+    "slot": {
+      "胴": 1
+    },
     "armorBonus": 0,
-    "requirementSkills": {},
-    "weight": 2,
-    "type": "illusion",
-    "memo": ""
+    "requirementSkills": {"歌術知識": 10},
+    "weight": 1,
+    "class": [],
+    "memo": "歌術への抵抗に＋30"
   },
   {
     "id": 4,
     "name": "ボイスチェンジャー",
-    "price": null,
-    "fp": null,
-    "maintenance": "",
-    "tl": 2,
-    "slot": "gear",
+    "price": 400000,
+    "fp": 20,
+    "maintenance": 0,
+    "maintenanceFp": 0,
+    "tl": 1,
+    "slot": {
+      "胴": 1
+    },
     "armorBonus": 0,
-    "requirementSkills": {},
+    "requirementSkills": {"歌術知識": 20},
     "weight": 1,
-    "type": "audio",
-    "memo": ""
+    "class": [],
+    "memo": "歌術の対象数か距離を×2倍"
   },
   {
     "id": 5,
     "name": "水晶板",
-    "price": null,
-    "fp": null,
-    "maintenance": "",
-    "tl": 2,
-    "slot": "gear",
+    "price": 160000,
+    "fp": 8,
+    "maintenance": 0,
+    "maintenanceFp": 0,
+    "tl": 1,
+    "slot": {
+      "胴": 1
+    },
     "armorBonus": 0,
-    "requirementSkills": {},
-    "weight": 2,
-    "type": "sensor",
-    "memo": ""
+    "requirementSkills": {"歌術知識": 5},
+    "weight": 1,
+    "class": [],
+    "memo": "《偵察》スキルに＋20"
   },
   {
     "id": 6,
     "name": "ダビングシステム",
-    "price": null,
-    "fp": null,
-    "maintenance": "",
-    "tl": 3,
-    "slot": "gear",
+    "price": 550000,
+    "fp": 27,
+    "maintenance": 0,
+    "maintenanceFp": 0,
+    "tl": 2,
+    "slot": {
+      "胴": 1
+    },
     "armorBonus": 0,
-    "requirementSkills": {},
-    "weight": 2,
-    "type": "recording",
-    "memo": ""
+    "requirementSkills": {"歌術知識": 10},
+    "weight": 1,
+    "class": [],
+    "memo": "歌姫が歌を止めても1D10ターン、戦闘起動が継続する"
   },
   {
     "id": 7,
-    "name": "ノイズ発生機",
-    "price": null,
-    "fp": null,
-    "maintenance": "",
-    "tl": 2,
-    "slot": "gear",
+    "name": "ノイズ発生器",
+    "price": 800000,
+    "fp": 40,
+    "maintenance": 0,
+    "maintenanceFp": 0,
+    "tl": 3,
+    "slot": {
+      "胴か腕": 1
+    },
     "armorBonus": 0,
-    "requirementSkills": {},
-    "weight": 2,
-    "type": "jamming",
-    "memo": ""
+    "requirementSkills": {"歌術知識": 20},
+    "weight": 3,
+    "class": [],
+    "memo": "奇声蟲のタイプAかBを発する。メンシュハイト・ノイのみ腕に装着可能"
   },
   {
     "id": 8,
     "name": "幻糸帷子",
-    "price": null,
-    "fp": null,
-    "maintenance": "",
-    "tl": 4,
-    "slot": "armor",
-    "armorBonus": 1,
+    "price": 600000,
+    "fp": 30,
+    "maintenance": 200000,
+    "maintenanceFp": 10,
+    "tl": 1,
+    "slot": {},
+    "armorBonus": 2,
     "requirementSkills": {},
-    "weight": 2,
-    "type": "stealth-armor",
+    "weight": 5,
+    "class": [],
     "memo": ""
   },
   {
     "id": 9,
     "name": "忍び布",
-    "price": null,
-    "fp": null,
-    "maintenance": "",
-    "tl": 1,
-    "slot": "armor",
-    "armorBonus": 0,
-    "requirementSkills": {},
+    "price": 400000,
+    "fp": 20,
+    "maintenance": 300000,
+    "maintenanceFp": 15,
+    "tl": 2,
+    "slot": {
+      "手か腕": 1
+    },
+    "armorBonus": 1,
+    "requirementSkills": {"歌術知識": 10},
     "weight": 1,
-    "type": "camouflage",
-    "memo": ""
+    "class": ["H"],
+    "memo": "隠蔽》スキルに＋30"
+  },
+  {
+    "id": 10,
+    "name": "パイルバンカー",
+    "price": 500000,
+    "fp": 25,
+    "maintenance": 60000,
+    "maintenanceFp": 3,
+    "tl": 3,
+    "slot": {
+      "腕": 1
+    },
+    "armorBonus": 0,
+    "requirementSkills": {"現世武器知識": 10},
+    "weight": 3,
+    "class": ["M"],
+    "memo": "拳闘の攻撃が命中した時、1D10＋3追加ダメージ"
   }
 ]

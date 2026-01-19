@@ -20,15 +20,15 @@
 // }
 
 // ヒーローシート：ヘッダー
-// import HeaderTest from "/test/pages/sheets/heroSheet/HeaderTest.jsx";
-
-// export default function App() {
-//   return <HeaderTest />;
-// }
-
-// ヒーローシート：スキル
-import SkillsTest from "/test/pages/sheets/heroSheet/SkillsTest.jsx";
+import HeaderTest from "/test/pages/sheets/heroSheet/HeaderTest.jsx";
 
 export default function App() {
-  return <SkillsTest />;
+  return <HeaderTest />;
 }
+
+// ヒーローシート：スキル
+// import SkillsTest from "/test/pages/sheets/heroSheet/SkillsTest.jsx";
+
+// export default function App() {
+//   return <SkillsTest />;
+// }

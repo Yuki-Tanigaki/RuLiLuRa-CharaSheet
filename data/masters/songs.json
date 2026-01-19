@@ -1,5 +1,5 @@
 [
-  { "id": 1, "name": "癒しの歌", "cost": "", "range": "", "duration": "", "memo": "" },
+  { "id": 1, "name": "癒しの歌", "cost": "気力2回", "range": "接触", "duration": "瞬間", "memo": "" },
   { "id": 2, "name": "個人戦闘補助の歌", "cost": "", "range": "", "duration": "", "memo": "" },
   { "id": 3, "name": "奏甲戦闘補助の歌", "cost": "", "range": "", "duration": "", "memo": "" },
   { "id": 4, "name": "打撃増加の歌", "cost": "", "range": "", "duration": "", "memo": "" },
