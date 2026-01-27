@@ -1,15 +1,11 @@
 // src/pages/sheets/catalogSheet/CatalogSheet.jsx
-import React, { useMemo, useState } from "react";
-import config from "/data/registry.json";
+import React, { useMemo, useState, useEffect } from "react";
+import { useCatalog } from "@/context/CatalogProvider.jsx";
 import { useCatalogSheetModel } from "./useCatalogSheetModel.js";
 
 function FieldEditor({ field, value, onChange }) {
   const type = String(field.type);
   const key = String(field.key);
-
-  const commonStyle = { width: "100%" };
-
-  // memo は textarea 優先
   const isMemoLike = key === "memo" || (type === "string" && String(value ?? "").length >= 60);
 
   if (type === "boolean") {
@@ -20,7 +16,6 @@ function FieldEditor({ field, value, onChange }) {
       </label>
     );
   }
-
   if (type === "string[]") {
     return (
       <textarea
@@ -32,20 +27,11 @@ function FieldEditor({ field, value, onChange }) {
       />
     );
   }
-
   if (type === "number" || type === "int") {
     return (
-      <input
-        className="sheet-input"
-        style={commonStyle}
-        type="number"
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      <input className="sheet-input" style={{ width: "100%" }} type="number" value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
     );
   }
-
-  // object系
   if (type !== "string") {
     return (
       <textarea
@@ -57,39 +43,45 @@ function FieldEditor({ field, value, onChange }) {
       />
     );
   }
-
-  // string
   if (isMemoLike) {
     return (
-      <textarea
-        className="sheet-input"
-        style={{ minHeight: 90, resize: "vertical" }}
-        value={String(value ?? "")}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      <textarea className="sheet-input" style={{ minHeight: 90, resize: "vertical" }} value={String(value ?? "")} onChange={(e) => onChange(e.target.value)} />
     );
   }
-
-  return (
-    <input
-      className="sheet-input"
-      style={commonStyle}
-      value={String(value ?? "")}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  );
+  return <input className="sheet-input" style={{ width: "100%" }} value={String(value ?? "")} onChange={(e) => onChange(e.target.value)} />;
 }
 
-export default function CatalogSheet({ state, setState }) {
-  const m = useCatalogSheetModel({ state, setState });
+export default function CatalogSheet({ userCatalog, setUserCatalog }) {
+  const catalog = useCatalog();
+  const m = useCatalogSheetModel({ userCatalog, setUserCatalog });
   const { categories, listMasterRows, listUserRows, addRow, updateRow, removeRow } = m;
 
-  const [active, setActive] = useState(categories?.[0]?.key ?? "skill");
+  const [active, setActive] = useState("");
   const [error, setError] = useState("");
 
-  const catDef = config?.categories?.[active];
-  const masterRows = useMemo(() => listMasterRows(active), [active]);
-  const userRows = useMemo(() => listUserRows(active), [active, state?.userCatalog]);
+  useEffect(() => {
+    if (!active && categories.length > 0) {
+      setActive(categories[0].key);
+    }
+  }, [active, categories]);
+
+  const catDef = useMemo(() => {
+    if (!active) return null;
+    try {
+      return catalog.getCategory(active);
+    } catch {
+      return null;
+    }
+  }, [catalog, active]);
+
+  const masterRows = useMemo(
+    () => (active ? listMasterRows(active) : []),
+    [listMasterRows, active]
+  );
+  const userRows = useMemo(
+    () => (active ? listUserRows(active) : []),
+    [listUserRows, active]
+  );
 
   const idField = String(catDef?.idField || "id");
   const nameField = String(catDef?.nameField || "name");
@@ -98,17 +90,15 @@ export default function CatalogSheet({ state, setState }) {
   const masterColumns = useMemo(() => {
     const rows = Array.isArray(masterRows) ? masterRows : [];
     const keySet = new Set();
-
     for (const r of rows) {
       if (!r || typeof r !== "object") continue;
       for (const k of Object.keys(r)) keySet.add(k);
     }
-
-    // id/name は先頭固定
     keySet.delete(idField);
     keySet.delete(nameField);
-
-    const rest = Array.from(keySet).sort((a, b) => String(a).localeCompare(String(b), "ja"));
+    const rest = Array.from(keySet).sort((a, b) =>
+      String(a).localeCompare(String(b), "ja")
+    );
     return [idField, nameField, ...rest];
   }, [masterRows, idField, nameField]);
 
@@ -122,6 +112,7 @@ export default function CatalogSheet({ state, setState }) {
       return String(v);
     }
   };
+
 
   return (
     <div className="page sheet" style={{ padding: 16 }}>
@@ -152,143 +143,132 @@ export default function CatalogSheet({ state, setState }) {
         ))}
       </div>
 
-      {/* Error */}
-      {error && (
-        <div style={{ marginTop: 12, padding: 10, border: "1px solid rgba(220,0,0,0.35)", borderRadius: 10, color: "crimson" }}>
-          {error}
+      {!catDef ? (
+        <div style={{ marginTop: 12, padding: 10, border: "1px solid rgba(0,0,0,0.2)", borderRadius: 10 }}>
+          master 定義が見つかりません: <code>{active || "(empty)"}</code>
         </div>
-      )}
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginTop: 16 }}>
-        {/* Master preview */}
-        <section className="panel" style={{ padding: 12 }}>
-          <div className="panel-title">ルールブック</div>
-          <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>
-            {catDef?.label ?? active} / 件数: {masterRows.length}
-          </div>
-
-          <div style={{ marginTop: 10 }}>
-            {/* 横スクロール領域 */}
-            <div
-              style={{
-                overflowX: "auto",
-                overflowY: "visible",
-                WebkitOverflowScrolling: "touch",
-                border: "1px solid rgba(0,0,0,0.06)",
-                borderRadius: 8,
-              }}
-            >
-              {/* max-content にして「列が増えた分だけ横に伸びる」 */}
-              <table className="sheet-table" style={{ width: "max-content", minWidth: "100%" }}>
-                <thead>
-                  <tr>
-                    {masterColumns.map((col) => (
-                      <th key={col} style={col === idField ? { width: 90 } : col === nameField ? { width: 260 } : undefined}>
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {masterRows.slice(0, 50).map((r, idx) => (
-                    <tr key={String(r?.[idField] ?? idx)}>
-                      {masterColumns.map((col) => {
-                        const text = renderCellValue(r?.[col]);
-                        const isLongText = col === "memo"; // memo だけ折り返し等したいならここを増やす
-                        return (
-                          <td key={col} style={isLongText ? { whiteSpace: "normal", minWidth: 240 } : undefined}>
-                            {text}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-
-                  {masterRows.length > 50 && (
-                    <tr>
-                      <td colSpan={masterColumns.length} style={{ opacity: 0.75 }}>
-                        …省略（先頭50件のみ表示）
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        {/* User editor */}
-        <section className="panel" style={{ padding: 12 }}>
-          <div className="panel-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <span>独自データ（編集）</span>
-
-            <button
-              type="button"
-              className="sheet-btn primary"
-              onClick={() => {
-                const r = addRow(active);
-                setError(r.ok ? "" : r.message);
-              }}
-            >
-              ＋ 追加
-            </button>
-          </div>
-
-          <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>件数: {userRows.length}</div>
-
-          {userRows.length === 0 ? (
-            <div style={{ marginTop: 10, opacity: 0.75 }}>まだありません。</div>
-          ) : (
-            <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
-              {userRows.map((row, idx) => (
-                <div key={`${active}-${idx}`} style={{ border: "1px solid rgba(0,0,0,0.12)", borderRadius: 12, padding: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                    <div style={{ fontWeight: 800 }}>
-                      #{idx + 1} / {row?.[idField]} / {row?.[nameField] || "(no name)"}
-                    </div>
-
-                    <button
-                      type="button"
-                      className="sheet-btn"
-                      onClick={() => removeRow(active, idx)}
-                    >
-                      削除
-                    </button>
-                  </div>
-
-                  <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
-                    {fields.map((f) => {
-                      const k = String(f.key);
-                      const v = row?.[k];
-
-                      return (
-                        <div key={`${active}-${idx}-${k}`} style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 10, alignItems: "start" }}>
-                          <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.85, paddingTop: 6 }}>
-                            {k}
-                            {f.required ? <span style={{ color: "crimson", marginLeft: 6 }}>*</span> : null}
-                            <div style={{ fontSize: 11, opacity: 0.7, fontWeight: 600 }}>{String(f.type)}</div>
-                          </div>
-
-                          <FieldEditor
-                            field={f}
-                            value={v}
-                            onChange={(nextVal) => {
-                              const patch = { [k]: nextVal };
-                              const r = updateRow(active, idx, patch);
-                              setError(r.ok ? "" : r.message);
-                            }}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+      ) : (
+        <>
+          {error && (
+            <div style={{ marginTop: 12, padding: 10, border: "1px solid rgba(220,0,0,0.35)", borderRadius: 10, color: "crimson", whiteSpace: "pre-wrap" }}>
+              {error}
             </div>
           )}
-        </section>
-      </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginTop: 16 }}>
+            {/* Master preview */}
+            <section className="panel" style={{ padding: 12 }}>
+              <div className="panel-title">ルールブック</div>
+              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>
+                {catDef?.label ?? active} / 件数: {masterRows.length}
+              </div>
+
+              <div style={{ marginTop: 10 }}>
+                <div style={{ overflowX: "auto", overflowY: "visible", WebkitOverflowScrolling: "touch", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 8 }}>
+                  <table className="sheet-table" style={{ width: "max-content", minWidth: "100%" }}>
+                    <thead>
+                      <tr>
+                        {masterColumns.map((col) => (
+                          <th key={col} style={col === idField ? { width: 90 } : col === nameField ? { width: 260 } : undefined}>
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {masterRows.slice(0, 50).map((r, idx) => (
+                        <tr key={String(r?.[idField] ?? idx)}>
+                          {masterColumns.map((col) => {
+                            const text = renderCellValue(r?.[col]);
+                            const isLongText = col === "memo";
+                            return (
+                              <td key={col} style={isLongText ? { whiteSpace: "normal", minWidth: 240 } : undefined}>
+                                {text}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                      {masterRows.length > 50 && (
+                        <tr>
+                          <td colSpan={masterColumns.length} style={{ opacity: 0.75 }}>
+                            …省略（先頭50件のみ表示）
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+
+            {/* User editor */}
+            <section className="panel" style={{ padding: 12 }}>
+              <div className="panel-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                <span>独自データ（編集）</span>
+
+                <button
+                  type="button"
+                  className="sheet-btn primary"
+                  onClick={() => {
+                    const r = addRow(active);
+                    setError(r.ok ? "" : r.message);
+                  }}
+                >
+                  ＋ 追加
+                </button>
+              </div>
+
+              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 8 }}>件数: {userRows.length}</div>
+
+              {userRows.length === 0 ? (
+                <div style={{ marginTop: 10, opacity: 0.75 }}>まだありません。</div>
+              ) : (
+                <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
+                  {userRows.map((row, idx) => (
+                    <div key={`${active}-${idx}`} style={{ border: "1px solid rgba(0,0,0,0.12)", borderRadius: 12, padding: 12 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                        <div style={{ fontWeight: 800 }}>
+                          #{idx + 1} / {row?.[idField]} / {row?.[nameField] || "(no name)"}
+                        </div>
+                        <button type="button" className="sheet-btn" onClick={() => removeRow(active, idx)}>
+                          削除
+                        </button>
+                      </div>
+
+                      <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
+                        {fields.map((f) => {
+                          const k = String(f.key);
+                          const v = row?.[k];
+                          return (
+                            <div key={`${active}-${idx}-${k}`} style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 10, alignItems: "start" }}>
+                              <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.85, paddingTop: 6 }}>
+                                {k}
+                                {f.required ? <span style={{ color: "crimson", marginLeft: 6 }}>*</span> : null}
+                                <div style={{ fontSize: 11, opacity: 0.7, fontWeight: 600 }}>{String(f.type)}</div>
+                              </div>
+
+                              <FieldEditor
+                                field={f}
+                                value={v}
+                                onChange={(nextVal) => {
+                                  const r = updateRow(active, idx, { [k]: nextVal });
+                                  setError(r.ok ? "" : r.message);
+                                }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        </>
+      )}
     </div>
   );
 }

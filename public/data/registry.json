@@ -63,8 +63,6 @@
         { "key": "id", "type": "number", "required": true },
         { "key": "name", "type": "string", "required": true },
         { "key": "cost", "type": "string", "default": "" },
-        { "key": "range", "type": "string", "default": "" },
-        { "key": "duration", "type": "string", "default": "" },
         { "key": "memo", "type": "string", "default": "" }
       ]
     },
@@ -102,7 +100,7 @@
         { "key": "skill", "type": "string", "default": "接近戦" },
         { "key": "antiArmor", "type": "number", "default": 0 },
         { "key": "damage", "type": "string", "default": "1D10 - 3 + {筋力修正}" },
-        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "requirementSkills", "type": "countMap", "default": {} },
         { "key": "memo", "type": "string", "default": "" }
       ]
     },
@@ -121,7 +119,7 @@
         { "key": "grip", "type": "string", "default": "片手" },
         { "key": "evadeMod", "type": "number", "default": 0 },
         { "key": "armorBonus", "type": "number", "default": 0 },
-        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "requirementSkills", "type": "countMap", "default": {} },
         { "key": "memo", "type": "string", "default": "" }
       ]
     },
@@ -139,7 +137,7 @@
         { "key": "tl", "type": "number", "default": 1 },
         { "key": "evadeMod", "type": "number", "default": 0 },
         { "key": "armorBonus", "type": "number", "default": 0 },
-        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "requirementSkills", "type": "countMap", "default": {} },
         { "key": "memo", "type": "string", "default": "" }
       ]
     },
@@ -172,13 +170,13 @@
         { "key": "maintenance", "type": "number", "default": 0 },
         { "key": "maintenanceFp", "type": "number", "default": 0 },
         { "key": "tl", "type": "number", "default": 1 },
-        { "key": "slot", "type": "slot", "default": {} },
+        { "key": "slot", "type": "countMap", "default": {} },
         { "key": "range", "type": "string", "default": "白" },
         { "key": "attacks", "type": "string", "default": "1/T" },
         { "key": "baseAccuracy", "type": "number", "default": 0 },
         { "key": "skill", "type": "string", "default": "接近戦" },
         { "key": "damage", "type": "string", "default": "1D10 - 3 + {筋力修正}" },
-        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "requirementSkills", "type": "countMap", "default": {} },
         { "key": "weight", "type": "number", "default": 1 },
         { "key": "class", "type": "string[]", "default": [] },
         { "key": "memo", "type": "string", "default": "" }
@@ -198,9 +196,9 @@
         { "key": "maintenance", "type": "number", "default": 0 },
         { "key": "maintenanceFp", "type": "number", "default": 0 },
         { "key": "tl", "type": "number", "default": 1 },
-        { "key": "slot", "type": "string", "default": "" },
+        { "key": "slot", "type": "countMap", "default": {} },
         { "key": "armorBonus", "type": "number", "default": 0 },
-        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "requirementSkills", "type": "countMap", "default": {} },
         { "key": "weight", "type": "number", "default": 1 },
         { "key": "class", "type": "string[]", "default": [] },
         { "key": "memo", "type": "string", "default": "" }
@@ -220,9 +218,9 @@
         { "key": "maintenance", "type": "number", "default": 0 },
         { "key": "maintenanceFp", "type": "number", "default": 0 },
         { "key": "tl", "type": "number", "default": 1 },
-        { "key": "slot", "type": "string", "default": "" },
+        { "key": "slot", "type": "countMap", "default": {} },
         { "key": "armorBonus", "type": "number", "default": 0 },
-        { "key": "requirementSkills", "type": "requirementSkills", "default": {} },
+        { "key": "requirementSkills", "type": "countMap", "default": {} },
         { "key": "weight", "type": "number", "default": 1 },
         { "key": "class", "type": "string[]", "default": [] },
         { "key": "memo", "type": "string", "default": "" }
