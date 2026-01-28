@@ -2,6 +2,9 @@
 import { useCallback, useMemo } from "react";
 import { useCatalog } from "@/context/CatalogProvider.jsx";
 
+/**
+ * 画面での編集体験を優先し、入力値は型に応じて最小限の整形を行う
+ */
 export function useCatalogSheetModel({ userCatalog, setUserCatalog }) {
   const catalog = useCatalog();
 
@@ -9,11 +12,6 @@ export function useCatalogSheetModel({ userCatalog, setUserCatalog }) {
     throw new Error("useCatalogSheetModel: setUserCatalog is required");
   }
 
-  // categories は masterCatalogs から作る（registry.json は読まない）
-  // createCatalogService に keys API が無いので、master 側に categoryOrder を持たせるのが理想。
-  // ここでは userCatalog のキー + よく使うキーの union を避け、確実に master を列挙できる仕組みが必要。
-  // => 仕様に忠実にするため「catalog.listCategoryKeys()」が必要。
-  // ただし今は無いので、最低限: masterCatalogs 側に __categoryKeys を入れておく前提で読む。
   const categories = useMemo(() => {
     const keys = catalog.listCategoryKeys?.() ?? [];
     return keys.map((key) => ({ key, def: catalog.getCategory(key) }));
@@ -37,6 +35,7 @@ export function useCatalogSheetModel({ userCatalog, setUserCatalog }) {
     if (v == null) return "";
     return String(v).trim();
   }
+
   function uniqStrings(xs) {
     const out = [];
     const set = new Set();
@@ -67,7 +66,6 @@ export function useCatalogSheetModel({ userCatalog, setUserCatalog }) {
     }
     if (t === "string") return raw == null ? "" : String(raw);
 
-    // object系: textarea の JSON
     if (raw == null || raw === "") return null;
     if (typeof raw === "object") return raw;
     const s = String(raw);
@@ -87,22 +85,105 @@ export function useCatalogSheetModel({ userCatalog, setUserCatalog }) {
     return null;
   }
 
-  function validateAndSummarize(categoryKey) {
-    const v = catalog.validateUserCategory(categoryKey);
-    const errs = v?.errors ?? [];
-    const warns = v?.warnings ?? [];
-    if (errs.length === 0 && warns.length === 0) return { ok: true, message: "" };
-    const msgs = [...errs.map((e) => `❌ ${e.message}`), ...warns.map((w) => `⚠️ ${w.message}`)];
-    return { ok: errs.length === 0, message: msgs.slice(0, 3).join("\n") };
+  function listMasterRowsInternal(categoryKey) {
+    const cat = catalog.getCategory(categoryKey);
+    return Array.isArray(cat?.list) ? cat.list : [];
   }
 
-  const listMasterRows = useCallback(
-    (categoryKey) => {
-      const cat = catalog.getCategory(categoryKey);
-      return Array.isArray(cat?.list) ? cat.list : [];
-    },
-    [catalog]
-  );
+  /**
+   * 衝突を避けるため、ユーザーデータは大きなID帯から採番する
+   */
+  function nextUserIdFrom90000(categoryKey) {
+    const START = 90000;
+
+    const def = catalog.getCategory(categoryKey);
+    const idField = String(def?.idField ?? "id");
+
+    const master = listMasterRowsInternal(categoryKey);
+    const used = new Set();
+
+    for (const r of master) {
+      const v = r?.[idField];
+      const n = typeof v === "number" ? v : Number(v);
+      if (Number.isFinite(n)) used.add(n);
+    }
+
+    const list = getUserListForKey(categoryKey);
+    let maxUser = START - 1;
+
+    for (const r of list) {
+      const v = r?.[idField];
+      const n = typeof v === "number" ? v : Number(v);
+      if (!Number.isFinite(n)) continue;
+      used.add(n);
+      if (n >= START && n > maxUser) maxUser = n;
+    }
+
+    let cand = Math.max(START, maxUser + 1);
+    while (used.has(cand)) cand += 1;
+    return cand;
+  }
+
+  /**
+   * 編集直後に「次状態」を見て、重複などを即時に検出する
+   */
+  function validateNextList(categoryKey, nextList) {
+    try {
+      const def = catalog.getCategory(categoryKey);
+      const idField = String(def?.idField ?? "id");
+      const nameField = String(def?.nameField ?? "name");
+
+      const errs = [];
+      const warns = [];
+
+      const idToIdx = new Map();
+      const nameToIdx = new Map();
+
+      nextList.forEach((row, i) => {
+        const id = row?.[idField];
+        const name = asTrimmedString(row?.[nameField]);
+
+        // id 重複は致命的寄り
+        if (id != null && id !== "") {
+          const key = String(id);
+          if (idToIdx.has(key)) {
+            errs.push(
+              `[${def?.label ?? categoryKey}] duplicated id in user: "${key}" (row#${idToIdx.get(
+                key
+              )} and row#${i})`
+            );
+          } else {
+            idToIdx.set(key, i);
+          }
+        }
+
+        // name 重複は警告
+        if (name) {
+          if (nameToIdx.has(name)) {
+            warns.push(
+              `[${def?.label ?? categoryKey}] duplicated name in user: "${name}" (row#${nameToIdx.get(
+                name
+              )} and row#${i})`
+            );
+          } else {
+            nameToIdx.set(name, i);
+          }
+        }
+      });
+
+      if (errs.length === 0 && warns.length === 0) return { ok: true, message: "" };
+
+      const msgs = [
+        ...errs.map((m) => `❌ ${m}`),
+        ...warns.map((m) => `⚠️ ${m}`),
+      ];
+      return { ok: errs.length === 0, message: msgs.slice(0, 3).join("\n") };
+    } catch (e) {
+      return { ok: false, message: String(e?.message ?? e) };
+    }
+  }
+
+  const listMasterRows = useCallback((categoryKey) => listMasterRowsInternal(categoryKey), [catalog]);
 
   const listUserRows = useCallback((categoryKey) => getUserListForKey(categoryKey), [userCatalog]);
 
@@ -114,7 +195,7 @@ export function useCatalogSheetModel({ userCatalog, setUserCatalog }) {
         const nameField = String(def.nameField ?? "name");
         const fields = Array.isArray(def.fields) ? def.fields : [];
 
-        const id = catalog.nextUserId(categoryKey);
+        const id = nextUserIdFrom90000(categoryKey);
 
         const row = {};
         for (const f of fields) {
@@ -123,7 +204,10 @@ export function useCatalogSheetModel({ userCatalog, setUserCatalog }) {
 
           if (Object.prototype.hasOwnProperty.call(f, "default")) {
             const v = f.default;
-            row[k] = typeof structuredClone === "function" ? structuredClone(v) : JSON.parse(JSON.stringify(v));
+            row[k] =
+              typeof structuredClone === "function"
+                ? structuredClone(v)
+                : JSON.parse(JSON.stringify(v));
           } else if (f.required) {
             row[k] = makeBlankValueByType(f.type);
           }
@@ -133,9 +217,10 @@ export function useCatalogSheetModel({ userCatalog, setUserCatalog }) {
         row[nameField] = "";
 
         const list = getUserListForKey(categoryKey);
-        setUserListForKey(categoryKey, [...list, row]);
+        const nextList = [...list, row];
+        setUserListForKey(categoryKey, nextList);
 
-        return validateAndSummarize(categoryKey);
+        return validateNextList(categoryKey, nextList);
       } catch (e) {
         return { ok: false, message: String(e?.message ?? e) };
       }
@@ -147,23 +232,30 @@ export function useCatalogSheetModel({ userCatalog, setUserCatalog }) {
     (categoryKey, index, patch) => {
       try {
         const def = catalog.getCategory(categoryKey);
+        const idField = String(def.idField ?? "id");
+
         const fields = Array.isArray(def.fields) ? def.fields : [];
         const fieldMap = new Map(fields.map((f) => [String(f.key), f]));
 
         const list = getUserListForKey(categoryKey);
-        if (index < 0 || index >= list.length) return { ok: false, message: `index out of range: ${index}` };
+        if (index < 0 || index >= list.length) {
+          return { ok: false, message: `index out of range: ${index}` };
+        }
 
         const cur = list[index] && typeof list[index] === "object" ? list[index] : {};
-        const next = { ...cur };
+        const nextRow = { ...cur };
 
         for (const [k0, rawVal] of Object.entries(patch ?? {})) {
           const k = String(k0);
+          if (k === idField) continue; // ユーザー側のidは固定
           const f = fieldMap.get(k);
-          next[k] = normalizeValueByType(f?.type ?? "string", rawVal);
+          nextRow[k] = normalizeValueByType(f?.type ?? "string", rawVal);
         }
 
-        setUserListForKey(categoryKey, list.map((r, i) => (i === index ? next : r)));
-        return validateAndSummarize(categoryKey);
+        const nextList = list.map((r, i) => (i === index ? nextRow : r));
+        setUserListForKey(categoryKey, nextList);
+
+        return validateNextList(categoryKey, nextList);
       } catch (e) {
         return { ok: false, message: String(e?.message ?? e) };
       }
@@ -174,9 +266,12 @@ export function useCatalogSheetModel({ userCatalog, setUserCatalog }) {
   const removeRow = useCallback(
     (categoryKey, index) => {
       const list = getUserListForKey(categoryKey);
-      if (index < 0 || index >= list.length) return { ok: false, message: `index out of range: ${index}` };
-      setUserListForKey(categoryKey, list.filter((_, i) => i !== index));
-      return validateAndSummarize(categoryKey);
+      if (index < 0 || index >= list.length) {
+        return { ok: false, message: `index out of range: ${index}` };
+      }
+      const nextList = list.filter((_, i) => i !== index);
+      setUserListForKey(categoryKey, nextList);
+      return validateNextList(categoryKey, nextList);
     },
     [catalog, userCatalog]
   );

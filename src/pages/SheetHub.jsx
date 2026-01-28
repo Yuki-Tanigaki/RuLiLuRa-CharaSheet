@@ -1,15 +1,21 @@
 // src/pages/SheetHub.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
+// 英雄シート
 import HeroSheet from "./sheets/heroSheet/HeroSheet.jsx";
 import { defaultHeroState } from "./sheets/heroSheet/defaultHeroState.js";
 
+// 持ち物シート
+import InventorySheet from "./sheets/inventorySheet/InventorySheet.jsx";
+import { defaultInventoryState } from "./sheets/inventorySheet/defaultInventoryState.js";
+
+// 自作データ管理
 import CatalogSheet from "./sheets/catalogSheet/CatalogSheet.jsx";
 
-import { commitHistory } from "../lib/versioning.js";
-import { buildShareUrl, decodeStateFromParam, readStateParamFromHash } from "../lib/shareUrl.js";
-import { exportJson, importJsonViaPicker, saveState, loadState } from "../lib/storage.js";
-
+/**
+ * 旧SheetHubの「SHEETS」相当。
+ * - stateful の扱いは残しておく（後でJSON/Share/Historyを戻しやすい）
+ */
 const SHEETS = {
   hero: {
     label: "英雄シート",
@@ -18,14 +24,21 @@ const SHEETS = {
     Component: HeroSheet,
     defaultState: defaultHeroState,
   },
-  // diva / rarm は省略
+  inventory: {
+    label: "持ち物シート",
+    path: "/sheets/inventory",
+    kind: "stateful",
+    Component: InventorySheet,
+    defaultState: defaultInventoryState,
+  },
+  // diva / rarm などは後で追加
 };
 
 function isStatefulSheet(def) {
   return (def?.kind ?? "stateful") === "stateful";
 }
 
-/** 最小モーダル（UserCatalogModal の Modal を流用してもOK） */
+/** 最小モーダル（背景クリックで閉じる / 閉じるボタン / サイズ制限 / スクロール） */
 function Modal({ open, title = "自作データ管理", onClose, children }) {
   if (!open) return null;
   return (
@@ -70,22 +83,51 @@ function Modal({ open, title = "自作データ管理", onClose, children }) {
             閉じる
           </button>
         </div>
+
         <div style={{ padding: 12 }}>{children}</div>
       </div>
     </div>
   );
 }
 
-export default function SheetHub() {
+/**
+ * SheetHub
+ * - App から userCatalog / setUserCatalog を受け取る
+ * - CatalogSheet はモーダルで常時開ける
+ * - sharedState（英雄/持ち物などシート横断の共有データ）
+ */
+export default function SheetHub({ userCatalog, setUserCatalog }) {
   const [sheetType, setSheetType] = useState("hero");
   const sheetDef = useMemo(() => SHEETS[sheetType] ?? SHEETS.hero, [sheetType]);
-
   const [mode, setMode] = useState("view");
+
+  // モーダル開閉
   const [catalogOpen, setCatalogOpen] = useState(false);
 
+  // シート状態
   const [sheetState, setSheetState] = useState(() => {
-    return loadState({ sheetType: "hero" }) ?? SHEETS.hero.defaultState();
+    try {
+      return sheetDef.defaultState?.() ?? {};
+    } catch {
+      return {};
+    }
   });
+
+  // 共有ステート（シート横断）
+  const [sharedState, setSharedState] = useState(() => {
+    try {
+      return {
+        inventory: defaultInventoryState?.() ?? { items: [] },
+      };
+    } catch {
+      return { inventory: { items: [] } };
+    }
+  });
+
+  // shared 更新ヘルパ（関数/値どちらもOK）
+  const setShared = (next) => {
+    setSharedState((prev) => (typeof next === "function" ? next(prev) : next));
+  };
 
   function switchSheet(nextType) {
     const def = SHEETS[nextType];
@@ -93,17 +135,22 @@ export default function SheetHub() {
 
     setSheetType(nextType);
 
-    const restored = loadState({ sheetType: nextType }) ?? def.defaultState();
+    let restored = {};
+    try {
+      restored = def.defaultState?.() ?? {};
+    } catch {
+      restored = {};
+    }
+
     setSheetState(restored);
     setMode("view");
   }
 
   function handleCreate() {
     if (!isStatefulSheet(sheetDef)) return;
-    const s = sheetDef.defaultState();
+    const s = sheetDef.defaultState?.() ?? {};
     setSheetState(s);
     setMode("create");
-    saveState(s, { sheetType });
   }
 
   function handleEdit() {
@@ -116,69 +163,33 @@ export default function SheetHub() {
     setMode("view");
   }
 
-  function handleSaveHistory() {
-    if (!isStatefulSheet(sheetDef)) return;
-    commitHistory(sheetState, "", sheetType);
-    window.dispatchEvent(new Event("rulilura:history-updated"));
-  }
-
+  // 旧版の共通操作は “枠だけ”残す（必要になったら実装を差し戻す）
   function handleJsonExport() {
-    if (!isStatefulSheet(sheetDef)) return;
-    exportJson(sheetState, { sheetType });
+    alert("TODO: JSON保存（まだ未実装）");
   }
 
   async function handleJsonImport() {
-    if (!isStatefulSheet(sheetDef)) return;
-    const imported = await importJsonViaPicker();
-    if (!imported) return;
-
-    setSheetState(imported);
-    setMode("edit");
-    saveState(imported, { sheetType });
+    alert("TODO: JSON読み出し（まだ未実装）");
   }
 
-  useEffect(() => {
-    const param = readStateParamFromHash();
-    const restored = decodeStateFromParam(param);
-    if (restored && typeof restored === "object") {
-      setSheetType("hero");
-      setSheetState(restored);
-      saveState(restored, { sheetType: "hero" });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   async function handleShare() {
-    if (!isStatefulSheet(sheetDef)) return;
+    alert("TODO: 共有URL（まだ未実装）");
+  }
 
-    const url = buildShareUrl({
-      path: sheetDef.path,
-      state: sheetState,
-    });
-
-    if (url.length > 8000) {
-      alert(
-        `共有URLが長すぎます（${url.length}文字）。\n所持品やメモが多い場合、短縮/サーバ保存方式を検討してください。`
-      );
-    }
-
-    await navigator.clipboard.writeText(url);
-    alert("共有URLをコピーしました！");
+  function handleSaveHistory() {
+    alert("TODO: 履歴保存（まだ未実装）");
   }
 
   const SheetComponent = sheetDef.Component;
 
-  // SheetComponent へ渡してる setState と “同じラッパ” を CatalogSheet にも渡す
-  const setStateWithPersist = (next) => {
-    setSheetState((prev) => {
-      const v = typeof next === "function" ? next(prev) : next;
-      saveState(v, { sheetType });
-      return v;
-    });
+  // シート更新は今は単純に反映（永続化はしない）
+  const setState = (next) => {
+    setSheetState((prev) => (typeof next === "function" ? next(prev) : next));
   };
 
   return (
     <div>
+      {/* 上部ツールバー */}
       <div style={{ display: "flex", gap: 8, margin: "8px 0", flexWrap: "wrap" }}>
         <button type="button" onClick={handleJsonExport} disabled={!isStatefulSheet(sheetDef)}>
           JSON保存
@@ -187,7 +198,7 @@ export default function SheetHub() {
           JSON読み出し
         </button>
 
-        {/* 「別シート」じゃなく「モーダルを開く」 */}
+        {/* いつでも開ける：モーダル */}
         <button type="button" onClick={() => setCatalogOpen(true)}>
           自作データ管理
         </button>
@@ -205,10 +216,13 @@ export default function SheetHub() {
         ))}
       </div>
 
+      {/* シート本体 */}
       <SheetComponent
         state={sheetState}
         mode={mode}
-        setState={setStateWithPersist}
+        setState={setState}
+        shared={sharedState}
+        setShared={setShared}
         onCreate={handleCreate}
         onEdit={handleEdit}
         onView={handleView}
@@ -216,9 +230,9 @@ export default function SheetHub() {
         onShare={handleShare}
       />
 
-      {/* モーダルでカタログ：state/setState をそのまま渡す */}
+      {/* 自作データ管理モーダル */}
       <Modal open={catalogOpen} onClose={() => setCatalogOpen(false)} title="自作データ管理">
-        <CatalogSheet state={sheetState} setState={setStateWithPersist} />
+        <CatalogSheet userCatalog={userCatalog} setUserCatalog={setUserCatalog} />
       </Modal>
     </div>
   );

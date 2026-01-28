@@ -3,14 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { buildAllCatalogs } from "@/common/catalog.js";
 import { loadUserCatalog, saveUserCatalog } from "@/common/userCatalogStorage.js";
 import { CatalogProvider } from "@/context/CatalogProvider.jsx";
-import CatalogSheet from "@/pages/sheets/catalogSheet/CatalogSheet.jsx";
-
-// ここはあなたのルーティング/ページ構成に合わせて差し替え
-// 例: CatalogSheet を仮で表示しておく
-// import CatalogSheet from "./pages/CatalogSheet.jsx";
-function Placeholder() {
-  return <div style={{ padding: 16 }}>App ready (replace with Router / Home)</div>;
-}
+import SheetHub from "@/pages/SheetHub.jsx";
 
 export default function App() {
   // S1: master はアプリ起動時に1回だけロードし immutable とみなす
@@ -61,7 +54,7 @@ export default function App() {
 
   return (
     <CatalogProvider masterCatalogs={masterCatalogs} userCatalog={userCatalog}>
-      <CatalogSheet userCatalog={userCatalog} setUserCatalog={setUserCatalog} />
+      <SheetHub userCatalog={userCatalog} setUserCatalog={setUserCatalog} />
     </CatalogProvider>
   );
 }
@@ -74,12 +67,6 @@ export default function App() {
 //   return <CatalogDebugPage />;
 // }
 
-// カタログシート
-// import CatalogTest from "../test/pages/sheets/catalogSheet/CatalogTest.jsx";
-// export default function App() {
-//   return <CatalogTest />;
-// }
-
 // ヒーローシート
 // import CatalogTest from "/test/pages/sheets/heroSheet/HeroTest.jsx";
 // export default function App() {
@@ -87,7 +74,7 @@ export default function App() {
 // }
 
 // ヒーローシート：ヘッダー
-// import HeaderTest from "/test/pages/sheets/heroSheet/HeaderTest.jsx";
+// import HeaderTest from "@/pages/debug/HeroHeaderDebugPage.jsx";
 // export default function App() {
 //   return <HeaderTest />;
 // }
